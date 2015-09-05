@@ -44,7 +44,7 @@ function returnState.update(dt, stateData)
     self.ignoreIds = {}
     entity.setAnimationState("movement", "idle")
   else
-    if stateData.timer < 0 and self.stuckCount > 0 then
+    if stateData.timer < 0 and (self.stuckCount > 0 or not canReachTarget(stateData.targetPosition)) then
       local p = stateData.targetPosition
       mcontroller.setPosition({p[1], p[2] + 0.5 + math.abs(mcontroller.boundBox()[2])})
       mcontroller.setVelocity({0,-1 * world.gravity(mcontroller.position())})
@@ -54,5 +54,5 @@ function returnState.update(dt, stateData)
     end
   end
 
-  return stateData.timer < -0.5,entity.configParameter("gardenSettings.cooldown", 15)
+  return stateData.timer <= -1,entity.configParameter("gardenSettings.cooldown", 15)
 end

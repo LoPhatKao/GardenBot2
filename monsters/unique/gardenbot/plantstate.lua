@@ -8,7 +8,7 @@ function plantState.enter()
     return {
       targetPosition = target.position,
       targetSeed = target.seed,
-      timer = entity.randomizeParameterRange("gardenSettings.locateTime"),
+      timer = travelTime(target.position),--entity.randomizeParameterRange("gardenSettings.locateTime"),
       located = false
     }
   end
@@ -61,21 +61,6 @@ util.debugLine(mcontroller.position(),vec2.add(mcontroller.position(),toTarget),
   return stateData.timer < 0,entity.configParameter("gardenSettings.cooldown", 15)
 end
 --------------------------------------------------------------------------------
-function plantState.saplingHeightCheck(d,pos)
-  if d ~= "S" then return d, true end -- d is a number, so is not a tree
-  if pos[1] % 3 ~= 0 then return 3, false end -- is tree, but not aligned properly
-  local targPos = {pos[1],pos[2]+19}
-  local blocksInLos = world.collisionBlocksAlongLine(pos, targPos, "Any")
-util.debugRect({pos[1],pos[2],targPos[1]+1,targPos[2]+1},"yellow")
-if self.debug and #blocksInLos > 0 then 
-local bl = blocksInLos[1]
-local tr = vec2.add(blocksInLos[#blocksInLos],{1,1})
---util.debugRect({bl[1],bl[2],tr[1],tr[2]},"red")-- lbrt
---util.debugLine({bl[1],bl[2]},{tr[1],tr[2]},"red") -- big red x
---util.debugLine({tr[1],bl[2]},{bl[1],tr[2]},"red") 
-end
-  return 3,#blocksInLos == 0
-end
 
 function plantState.findPosition(position)
 
@@ -102,9 +87,9 @@ function plantState.findPosition(position)
       if not world.tileIsOccupied(targetPosition) and canReachTarget(targetPosition) and (failedMemory == nil or failedMemory < 3) then
         local seed = plantState.getSeedName()
         if seed ~= nil then
-          local s = plantState.plotSize(seed.name)
-		      local dx, shCheck = plantState.saplingHeightCheck(s,targetPosition)--lpk: if its a tree, check more stuff
-		      if targetPosition[1] % dx == 0 and shCheck and world.placeObject("gardenbotplot" .. s, targetPosition) then
+          local sw,sh = plantState.plotSize(seed.name)
+		      local shCheck = plantState.saplingHeightCheck(sw,sh,targetPosition)--lpk: if its a tree, check more stuff
+		      if shCheck and world.placeObject("gardenbotplot" .. sw, targetPosition) then
             return { position = targetPosition, seed = seed.name}
           end
         end
@@ -115,10 +100,28 @@ function plantState.findPosition(position)
   return nil
 end
 --------------------------------------------------------------------------------
+function plantState.saplingHeightCheck(x,y,pos)
+  if x == "S" then x = 3 end -- x is S, so is a tree
+  if pos[1] % x ~= 0 then return false end -- is not aligned properly
+  
+  local targPos = {pos[1],pos[2]+y-1}
+  local blocksInLos = world.collisionBlocksAlongLine(pos, targPos, "Any")
+  
+if self.debug and #blocksInLos > 0 then 
+local bl,tr = blocksInLos[1], vec2.add(blocksInLos[#blocksInLos],{1,1})
+util.debugRect({bl[1],bl[2],tr[1],tr[2]},"red")-- lbrt
+elseif self.debug then
+util.debugRect({pos[1],pos[2],targPos[1]+1,targPos[2]+1},"yellow")
+end
+  return #blocksInLos == 0
+end
+--------------------------------------------------------------------------------
 function plantState.plotSize(name)
-  if string.find(name, "sapling") then return "S" end
-  if storage.seedMemory[name] ~= nil then return storage.seedMemory[name] end
-  return 2
+  if string.find(name, "sapling") then return "S",20 end
+  if storage.seedMemory[name] ~= nil then 
+    return storage.seedMemory[name][1], storage.seedMemory[name][2] 
+  end
+  return 2,4
 end
 --------------------------------------------------------------------------------
 function plantState.addToMemory(name, pos)
@@ -126,7 +129,8 @@ function plantState.addToMemory(name, pos)
   local seedIds = world.objectQuery(pos, 0, {name = name})
   if seedIds[1] then
     local bounds = world.callScriptedEntity(seedIds[1], "entity.boundBox")
-    local plot = (bounds[3] - bounds[1]) - 2
+    local plot = {(bounds[3] - bounds[1]) - 2,(bounds[4] - bounds[2]) - 2}
+--    world.logInfo("%s%s",name,plot)
     storage.seedMemory[name] = plot
   end
 end
@@ -140,7 +144,7 @@ function plantState.getSeedName(name)
   if seed == nil then seed = self.inv.findMatch(search, self.ignore) end
   if seed ~= nil then return seed,nil end
   
-  if self.homeBin ~= nil and world.entityExists(self.homeBin) then -- check homebin before randoms
+  if self.homeBin ~= nil and world.entityExists(self.homeBin) then --lpk: check homebin before randoms
       seed = self.inv.matchInContainer(self.homeBin, {name = search, ignore = self.ignore})
       if seed ~= nil then return seed,self.homeBin end  
   end

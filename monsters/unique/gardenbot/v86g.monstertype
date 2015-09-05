@@ -44,7 +44,7 @@
       "locateTime" : [6.0, 7.0],
       "harvestTime" : [1.0, 2.0],
       "plantTime" : [0.5, 1.0],
-      "depositTime" : [0.3, 0.6],
+      "depositTime" : [0.5, 1.0],
       "searchType" : "radiallumber",
       "efficiency" : 1.0,
       "fovHeight" : 4,

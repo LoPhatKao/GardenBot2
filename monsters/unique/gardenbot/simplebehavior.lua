@@ -30,6 +30,7 @@ function simplegardenbot.init(args)
   self.state.stateCooldown("harvestState",cooldown())
   self.state.stateCooldown("depositState",cooldown()*2)
   
+  self.inState = ""
   self.debug = true
   
   self.stuckCount = 0
@@ -44,10 +45,11 @@ simplegardenbot.main()
 end
 
 function simplegardenbot.main()
+  self.inState = self.state.stateDesc()
   self.state.update(self.dt)--entity.dt())
   self.sensors.clear()
   if self.debug then
-    world.debugText("%s",self.state.stateDesc(),vec2.add(mcontroller.position(),{-3,1.5}),"white")
+    world.debugText("%s",self.inState,vec2.add(mcontroller.position(),{-3,1.5}),"white")
   end
 end
 --------------------------------------------------------------------------------
@@ -60,11 +62,12 @@ function move(direction)
   direction = touchingFenceDirection(mcPos,direction)-- fence last
  
   entity.setAnimationState("movement", "move")
-  mcontroller.controlMove(direction, direction == mcontroller.facingDirection())
+  local run = self.inState ~= "moveState"--util.toDirection(direction) == mcontroller.facingDirection() and not self.inState == "moveState"
+  mcontroller.controlMove(direction, run)
   mcontroller.controlFace(direction)
   checkStuck()
   self.lastMoveDirection = util.toDirection(direction)
-  if self.stuckCount > entity.configParameter("stuckCountMax",15) then
+  if self.stuckCount > entity.configParameter("stuckCountMax",15) and self.inState ~= "returnState" then
     self.state.pickState()
   end
 end

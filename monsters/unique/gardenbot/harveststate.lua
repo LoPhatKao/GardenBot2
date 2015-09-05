@@ -16,7 +16,7 @@ function harvestState.enter()
     return {
       targetId = target.targetId,
       targetPosition = target.targetPosition,
-      timer = entity.randomizeParameterRange("gardenSettings.locateTime"),
+      timer = travelTime(target.targetPosition)+1, --entity.randomizeParameterRange("gardenSettings.locateTime"),
       located = false,
       count = 0,
       type = type
@@ -57,7 +57,8 @@ function harvestState.farmUpdate(dt, stateData)
     move(toTarget)
   end
 
-  return stateData.timer < 0, entity.randomizeParameterRange("gardenSettings.harvestTime")
+  return stateData.timer < 0,entity.configParameter("gardenSettings.cooldown", 15)
+--  entity.randomizeParameterRange("gardenSettings.harvestTime")
 end
 --------------------------------------------------------------------------------
 function harvestState.findFarmPosition(position)
@@ -74,7 +75,7 @@ function harvestState.findFarmPosition(position)
 --  end
   for _,oId in pairs(objectIds) do
     local oPosition = world.entityPosition(oId)
-    if canReachTarget(oId) and harvestState.canHarvest(oId) then
+    if harvestState.canHarvest(oId) and canReachTarget(oId) then
       return { targetId = oId, targetPosition = oPosition }
     end
   end
@@ -102,9 +103,10 @@ util.debugLine(mcontroller.position(),vec2.add(mcontroller.position(),toTarget),
       mcontroller.controlFace(util.toDirection(toTarget[1]+1)) --lpk: +1 to face center of tree
       entity.setAnimationState("attack", "melee")
       stateData.timer = entity.randomizeParameterRange("gardenSettings.harvestTime")
-      world.damageTiles({stateData.targetPosition}, "foreground", position, "plantish", 1)
-      world.damageTiles({vec2.add(stateData.targetPosition,{0,-1})}, "foreground", position, "plantish", 1)
+      local tileDmg = stateData.count --lpk: sliding damage - 0,1,2,3 .. etc
       stateData.count = stateData.count + 1
+      world.damageTiles({vec2.add(stateData.targetPosition,{0,1})}, "foreground", position, "plantish", tileDmg)
+      world.damageTiles({vec2.add(stateData.targetPosition,{0,-1})}, "foreground", position, "plantish", tileDmg)
       if entity.hasSound("work") then entity.playSound("work") end
     end  
   else
@@ -112,7 +114,7 @@ util.debugLine(mcontroller.position(),vec2.add(mcontroller.position(),toTarget),
     move({toTarget[1], toTarget[2] + dy})
   end
 
-  if stateData.timer < 0 or stateData.count > 5 then
+  if stateData.timer < 0 or stateData.count > 9 then
     self.ignoreIds[stateData.targetId] = true
     return true,entity.configParameter("gardenSettings.cooldown", 15)
   end
@@ -134,7 +136,7 @@ function harvestState.findLumberPosition(position)
   for _,oId in pairs(objectIds) do
     local oPosition = world.entityPosition(oId)
     oPosition[2] = oPosition[2] + 1
-    if world.entityType(oId) == "plant" and canReachTarget(oId) and not self.ignoreIds[oId] then 
+    if not self.ignoreIds[oId] and world.entityType(oId) == "plant" and canReachTarget(oId) then 
       return { targetId = oId, targetPosition = oPosition }
     end
   end

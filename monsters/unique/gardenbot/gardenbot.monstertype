@@ -42,7 +42,7 @@
       "locateTime" : [2.0, 3.0],
       "harvestTime" : [1.0, 2.0],
       "plantTime" : [1.0, 2.0],
-      "depositTime" : [0.2, 0.5],
+      "depositTime" : [0.5, 1.0],
       "searchType" : "linearfarm",
       "fovHeight" : 2,
       "seed" : [ "seed", "avaliplant", "soybean", "bm_bamboosprout", "mushroomspore" ],

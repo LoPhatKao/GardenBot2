@@ -7,85 +7,17 @@ harvestPools = {}
 function harvestPools.spawnTreasure (pos, poolname, level, seed) -- i'm ignoring level and seed
   if type(pos) ~= "table" then return false end -- no spawn pos
   if type(poolname) ~= "string" then return false end -- invalid name parameter
-  if pools[poolname] == nil then return false -- not listed
-  
-  else -- is listed in known pools, generate dat bling
-    local tp = pools[poolname]
-    local didSpawn = false
-    if tp.fill ~= nil then -- spawn 'always drop' items
-      for i = 1,#tp.fill do
-        harvestPools.doSpawnItem(pos,tp.fill[i].item)
-        didSpawn = true
-      end
-    end
-    if tp.pool ~= nil then -- spawn 'maybe drop' items
-      local maxrnd = numRounds(tp.poolRounds)
-      for i = 1, maxrnd do
-        local ritem = tp.pool[math.random(1,#tp.pool)]
-        if math.random() <= poolWeight(ritem) then
-          harvestPools.doSpawnItem(pos,ritem.item)
-          didSpawn = true
-        end
-      end
-    end
-    return didSpawn
-  end
-  return false
-end
 
----------------------------------------------------------------------------------------
---------------  helper funcs
----------------------------------------------------------------------------------------
-
-function numRounds(poolRounds)--randomize # rounds of pool spawning, returning 0 is ok
-  if type(poolRounds) == "table" then -- usually a table of tables
-    for i = #poolRounds,1,-1 do
-      if math.random() <= poolRounds[i][1] or i == 1 then return poolRounds[i][2] end
-    end
-  end
-  return 0
-end
-
-function poolWeight(pool)
-if pool.weight ~= nil then return pool.weight end
-return 1
-end 
-
-function itemName(item)
-  if type(item) == "string" then return item end
-  if type(item) == "table" then return item[1] end
-  return "perfectlygenericitem" -- shouldnt ever get here.. 
-end
-
-function itemCount(item)
-if type(item) == "table" and item[2] ~= nil then return item[2] end
-return 1
-end
-
-function itemParams(item) -- for stuff with params, generated weps etc.
-if type(item) == "table" and item[3] ~= nil then return item[3] end
-return {}
-end
-
-
-function harvestPools.doSpawnItem(pos,item)
-world.logInfo("Spawning: %s",item)
-iName = itemName(item)
-iCnt = itemCount(item)
-iParam = itemParams(item)
-if not world.spawnItem(iName,pos,iCnt,iParam) then 
-world.logInfo("Failed to spawn item: %s",item)
-end
-end
 
 ---------------------------------------------------------------------------------------
 --  pool data - here comes the hugeness -.- lol - somewhere near 250kb
---  poolcounts: vanilla = 39, MFM = 27, FU = 174, OPP = 737
+--  poolcounts: vanilla = 39(7 used), MFM = 27, FU = 174, OPP = 737 (-1 for 2kbpotage)
 -- should add popular race crops - avali etc
+-- gb2rc2.1 - move to local of spawnTreasure
 ---------------------------------------------------------------------------------------
-pools = {
+local pools = {
 -- kao's test seed
-moneyHarvest = {fill={{item="moneyseed"}},pool={{weight=0.1,item={"moneyseed",1}},{weight=0.1,item={"voxel5k",1}},{item={"voxel1k",2}}},poolRounds={{0.7,2},{0.3,3}}},
+moneyHarvest = {fill={{item="moneyseed"}},pool={{weight=0.05,item={"moneyseed",1}},{weight=0.1,item={"voxel10k",1}},{weight=0.2,item={"voxel5k",1}},{weight=0.3,item={"voxel2k",1}},{weight=0.4,item={"voxel1k",1}},{item={"money",100}}},poolRounds={{0.7,1},{0.3,0}}},
 -- non-food vanilla spawns -v Spirited Giraffe u5
 mushroomHarvest={pool={{weight=1.0,item="shroom"}},poolRounds={{0.7,1},{0.3,2}}},
 flowerredHarvest={pool={{weight=1.0,item="petalred"}},poolRounds={{0.6,1},{0.3,2},{0.1,3}}},
@@ -94,6 +26,10 @@ flowerspringHarvest={pool={{weight=1.0,item="petalblue"}},poolRounds={{0.6,1},{0
 floweryellowHarvest={pool={{weight=1.0,item="petalyellow"}},poolRounds={{0.6,1},{0.3,2},{0.1,3}}},
 thornplantHarvest={pool={{weight=1.0,item="thornfruit"}},poolRounds={{0.4,1},{0.4,2},{0.2,3}}},
 swordstoneHarvest={fill={{item="cobblestonematerial"}},pool={{weight=1.0,item="stonesword"},{weight=0.05,item="legendblade"}},poolRounds={{1.0,1}}},
+-- Avali Race -v 1.4.2 Plants (3 entries)
+kiriHarvest={fill={{item="avaliplant1"}},pool={{weight=1.0,item="avaliproduce1"},{weight=1.0,item="avaliplant1"},{weight=1.0,item="plantfibre"}},poolRounds={{0.7,1},{0.3,2}}},
+nakatiHarvest={fill={{item="avaliplant2"}},pool={{weight=1.0,item="avaliproduce2"},{weight=1.0,item="avaliproduce2"},{weight=1.0,item="avaliplant2"},{weight=1.0,item={"plantfibre",2}}},poolRounds={{0.7,1},{0.3,2}}},
+piruHarvest={fill={{item="avaliplant3"}},pool={{weight=1.0,item="avaliproduce3"},{weight=1.0,item="avaliplant3"},{weight=1.0,item="plantfibre"}},poolRounds={{0.7,1},{0.3,2}}},
 -- More Food Mod -v 2.1.1 (27 entries)
 artichokeMFMHarvest={fill={{item="artichokeMFMseed"}},pool={{weight=0.6,item="artichokeMFM"},{weight=0.2,item="artichokeMFMseed"},{weight=0.2,item="plantfibre"}},poolRounds={{0.7,2},{0.3,3}}},
 oatsMFMHarvest={fill={{item="oatsMFMseed"}},pool={{weight=0.6,item="wholeoatsMFM"},{weight=0.2,item="oatsMFMseed"},{weight=0.2,item="plantfibre"}},poolRounds={{0.7,2},{0.3,3}}},
@@ -1039,4 +975,76 @@ generatedgunt9Harvest002={pool={{weight=0.01,item={"generatedgun",1,{definition=
 generatedgunt10Harvest002={pool={{weight=0.01,item={"generatedgun",1,{definition="avianblaster",level=10}}},{weight=0.01,item={"generatedgun",1,{definition="avianheavyblaster",level=10}}},{weight=0.01,item={"generatedgun",1,{definition="boneassault",level=10}}},{weight=0.01,item={"generatedgun",1,{definition="bonepistol",level=10}}},{weight=0.01,item={"generatedgun",1,{definition="boneshotgun",level=10}}},{weight=0.01,item={"generatedgun",1,{definition="cellzapper",level=10}}},{weight=0.01,item={"generatedgun",1,{definition="commonassaultrifle",level=10}}},{weight=0.01,item={"generatedgun",1,{definition="commonplasmaassaultrifle",level=10}}},{weight=0.01,item={"generatedgun",1,{definition="commonburstrifle",level=10}}},{weight=0.01,item={"generatedgun",1,{definition="commongrenadelauncher",level=10}}},{weight=0.01,item={"generatedgun",1,{definition="commonmachinepistol",level=10}}},{weight=0.01,item={"generatedgun",1,{definition="commonplasmamachinepistol",level=10}}},{weight=0.01,item={"generatedgun",1,{definition="commonpistol",level=10}}},{weight=0.01,item={"generatedgun",1,{definition="commonplasmapistol",level=10}}},{weight=0.01,item={"generatedgun",1,{definition="commonrocketlauncher",level=10}}},{weight=0.01,item={"generatedgun",1,{definition="commonshotgun",level=10}}},{weight=0.01,item={"generatedgun",1,{definition="commonplasmashotgun",level=10}}},{weight=0.01,item={"generatedgun",1,{definition="commonsniperrifle",level=10}}},{weight=0.01,item={"generatedgun",1,{definition="commonplasmasniperrifle",level=10}}},{weight=0.01,item={"generatedgun",1,{definition="crossbow",level=10}}},{weight=0.01,item={"generatedgun",1,{definition="crossbowspecial",level=10}}},{weight=0.01,item={"generatedgun",1,{definition="crossbowwood",level=10}}},{weight=0.01,item={"generatedgun",1,{definition="flamethrower",level=10}}},{weight=0.01,item={"generatedgun",1,{definition="florangrenadelauncher",level=10}}},{weight=0.01,item={"generatedgun",1,{definition="floranneedler",level=10}}},{weight=0.01,item={"generatedgun",1,{definition="globelauncher",level=10}}},{weight=0.01,item={"generatedgun",1,{definition="legendaryassaultrifle",level=10}}},{weight=0.01,item={"generatedgun",1,{definition="legendarygrenadelauncher",level=10}}},{weight=0.01,item={"generatedgun",1,{definition="legendarymachinepistol",level=10}}},{weight=0.01,item={"generatedgun",1,{definition="legendarypistol",level=10}}},{weight=0.01,item={"generatedgun",1,{definition="legendaryrocketlauncher",level=10}}},{weight=0.01,item={"generatedgun",1,{definition="legendaryshotgun",level=10}}},{weight=0.01,item={"generatedgun",1,{definition="legendarysniperrifle",level=10}}},{weight=0.01,item={"generatedgun",1,{definition="lightningcoil",level=10}}},{weight=0.01,item={"generatedgun",1,{definition="pulserifle",level=10}}},{weight=0.01,item={"generatedgun",1,{definition="rareassaultrifle",level=10}}},{weight=0.01,item={"generatedgun",1,{definition="rareplasmaassaultrifle",level=10}}},{weight=0.01,item={"generatedgun",1,{definition="raregrenadelauncher",level=10}}},{weight=0.01,item={"generatedgun",1,{definition="raremachinepistol",level=10}}},{weight=0.01,item={"generatedgun",1,{definition="rareplasmamachinepistol",level=10}}},{weight=0.01,item={"generatedgun",1,{definition="rarepistol",level=10}}},{weight=0.01,item={"generatedgun",1,{definition="rareplasmapistol",level=10}}},{weight=0.01,item={"generatedgun",1,{definition="rarerocketlauncher",level=10}}},{weight=0.01,item={"generatedgun",1,{definition="rareshotgun",level=10}}},{weight=0.01,item={"generatedgun",1,{definition="rareplasmashotgun",level=10}}},{weight=0.01,item={"generatedgun",1,{definition="raresniperrifle",level=10}}},{weight=0.01,item={"generatedgun",1,{definition="rareplasmasniperrifle",level=10}}},{weight=0.01,item={"generatedgun",1,{definition="revolver",level=10}}},{weight=0.01,item={"generatedgun",1,{definition="shattergun",level=10}}},{weight=0.01,item={"generatedgun",1,{definition="stingergun",level=10}}},{weight=0.01,item={"generatedgun",1,{definition="uncommonassaultrifle",level=10}}},{weight=0.01,item={"generatedgun",1,{definition="uncommongrenadelauncher",level=10}}},{weight=0.01,item={"generatedgun",1,{definition="uncommonmachinepistol",level=10}}},{weight=0.01,item={"generatedgun",1,{definition="uncommonpistol",level=10}}},{weight=0.01,item={"generatedgun",1,{definition="uncommonrocketlauncher",level=10}}},{weight=0.01,item={"generatedgun",1,{definition="uncommonshotgun",level=10}}},{weight=0.01,item={"generatedgun",1,{definition="uncommonplasmashotgun",level=10}}},{weight=0.01,item={"generatedgun",1,{definition="uncommonsniperrifle",level=10}}},{weight=0.01,item={"generatedgun",1,{definition="uncommonplasmasniperrifle",level=10}}},{weight=0.01,item={"generatedgun",1,{definition="uzi",level=10}}}},poolRounds={{1,1}}}
 
 } -- end of pool list
+pools["2kbpotageHarvest002"]={pool={{weight=0.5,item={"2kbpotage",1}},{weight=0.3,item={"2kbpotage",2}},{weight=0.2,item={"2kbpotage",4}}},poolRounds={{1,1}}}
+-- fix 2k pot - lua didnt like label starting with a number
 
+  if pools[poolname] == nil then return false -- not listed
+  
+  else -- is listed in known pools, generate dat bling
+    local tp = pools[poolname]
+    local didSpawn = false
+    if tp.fill ~= nil then -- spawn 'always drop' items
+      for i = 1,#tp.fill do
+        harvestPools.doSpawnItem(pos,tp.fill[i].item)
+        didSpawn = true
+      end
+    end
+    if tp.pool ~= nil then -- spawn 'maybe drop' items
+      local maxrnd = numRounds(tp.poolRounds)
+      for i = 1, maxrnd do
+        local ritem = tp.pool[math.random(1,#tp.pool)]
+        if math.random() <= poolWeight(ritem) then
+          harvestPools.doSpawnItem(pos,ritem.item)
+          didSpawn = true
+        end
+      end
+    end
+    return didSpawn
+  end
+  return false
+end
+
+---------------------------------------------------------------------------------------
+--------------  helper funcs
+---------------------------------------------------------------------------------------
+
+function numRounds(poolRounds)--randomize # rounds of pool spawning, returning 0 is ok
+  if type(poolRounds) == "table" then -- usually a table of tables
+    for i = #poolRounds,1,-1 do
+      if math.random() <= poolRounds[i][1] or i == 1 then return poolRounds[i][2] end
+    end
+  end
+  return 0
+end
+
+function poolWeight(pool)
+if pool.weight ~= nil then return pool.weight end
+return 1
+end 
+
+function itemName(item)
+  if type(item) == "string" then return item end
+  if type(item) == "table" then return item[1] end
+  return "perfectlygenericitem" -- shouldnt ever get here.. 
+end
+
+function itemCount(item)
+if type(item) == "table" and item[2] ~= nil then return item[2] end
+return 1
+end
+
+function itemParams(item) -- for stuff with params, generated weps etc.
+if type(item) == "table" and item[3] ~= nil then return item[3] end
+return {}
+end
+
+
+function harvestPools.doSpawnItem(pos,item)
+--world.logInfo("Spawning: %s",item)
+iName = itemName(item)
+iCnt = itemCount(item)
+iParam = itemParams(item)
+  if not world.spawnItem(iName,pos,iCnt,iParam) then 
+    world.logInfo("Failed to spawn item: %s",item)
+  end
+end

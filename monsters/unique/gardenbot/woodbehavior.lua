@@ -26,6 +26,7 @@ function simplelumberbot.init(args)
   self.state.stateCooldown("harvestState",cooldown())
   self.state.stateCooldown("depositState",cooldown()*2)
   
+  self.inState = ""
   self.debug = true
   
   self.stuckCount = 0
@@ -35,10 +36,11 @@ function simplelumberbot.init(args)
 end
 --------------------------------------------------------------------------------
 function simplelumberbot.main()
+  self.inState = self.state.stateDesc()
   self.state.update(self.dt)--entity.dt())
   self.sensors.clear()
   if self.debug then
-    world.debugText("%s",self.state.stateDesc(),vec2.add(mcontroller.position(),{-3,1.5}),"white")
+    world.debugText("%s",self.inState,vec2.add(mcontroller.position(),{-3,1.5}),"white")
   end
 end
 
@@ -60,7 +62,7 @@ local mcPos = mcontroller.position()
   --lpk: all the states call move, check for fence here
   moveDir = touchingFenceDirection(mcPos,moveDir) -- in gardenbot.lua
 
-  local run = (mcontroller.facingDirection() == moveDir)
+  local run = self.inState ~= "moveState"--(mcontroller.facingDirection() == moveDir)
 
   if self.jumpTimer <= 0 then
     if jumpThresholdX == nil then jumpThresholdX = 4 end
@@ -116,7 +118,7 @@ local mcPos = mcontroller.position()
 --  mcontroller.controlFace(moveDir)
   checkStuck()
   self.lastMoveDirection = util.toDirection(moveDir)
-  if self.stuckCount > entity.configParameter("stuckCountMax",15) then
+  if self.stuckCount > entity.configParameter("stuckCountMax",15) and self.inState ~= "returnState" then
     self.state.pickState()
   end
 end

@@ -47,7 +47,7 @@ function gardenbot.damage(args)
   end
 
   if entity.health() <= 0 and not self.dead then -- lpk: also check dead to fix dupe exploit ;(
---util.debugLog("%s",status)
+--util.debugLog("status: %s\nscript: %s",status,script)
   if self.isCodeProfiling then profilerApi.logData() end
     local spawner = nil
     if entity.type() then spawner = entity.type() .. "spawner" end
@@ -177,7 +177,8 @@ end
 --------------------------------------------------------------------------------
 function chatNearbyPlayerOrBot()
 -- report current inventory to players
--- binary 69 and goatse ascii/binary art for bots
+-- binary art for bots - icons built into hobo etc.
+
   --  entity.say("01000101") "ð«"
   --  entity.say("ԑ)҈ (Ӟ") "E{0}3" "∈)☼(∋"  "ԑ(þ)Ӟ"
 
@@ -212,11 +213,18 @@ function calculateSeparationMovement()
 end
 
 --------------------------------------------------------------------------------
-function travelTime(distance)
+function travelTime(distance) -- lpk: modded to accept a pos also
+  if type(distance) == "table" then return travelTimeToPos(distance) end
   local runSpeed = mcontroller.baseParameters().walkSpeed
   return math.abs(distance / runSpeed)
 end
 
+function travelTimeToPos(pos)
+  local toTarget = world.distance(pos, mcontroller.position())
+  local distance = world.magnitude(toTarget)
+  local runSpeed = mcontroller.baseParameters().walkSpeed
+  return math.abs(distance / runSpeed)
+end
 --------------------------------------------------------------------------------
 -- estimate the maximum jump duration
 function jumpTime()

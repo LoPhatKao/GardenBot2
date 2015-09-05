@@ -13,7 +13,7 @@ function depositState.enter()
       return {
         targetId = target.targetId,
         targetPosition = target.targetPosition,
-        timer = entity.randomizeParameterRange("gardenSettings.locateTime"),
+        timer = travelTime(target.targetPosition),--entity.randomizeParameterRange("gardenSettings.locateTime"),
         located = false
       }
     end
@@ -38,6 +38,7 @@ util.debugLine(mcontroller.position(),vec2.add(mcontroller.position(),toTarget),
     if not stateData.located then
       stateData.located = true
       stateData.timer = entity.randomizeParameterRange("gardenSettings.depositTime")
+      world.containerOpen(stateData.targetId)
     elseif stateData.timer < 0 then
       --TODO storage not working between game sessions for monsters
       --local seeds = self.inv.remove({group = "seeds", all = true})
@@ -45,6 +46,7 @@ util.debugLine(mcontroller.position(),vec2.add(mcontroller.position(),toTarget),
       --local result = world.callScriptedEntity(stateData.targetId, "add", items)
       --self.inv.add(seeds)
       self.inv.putInContainer(stateData.targetId)
+      world.containerClose(stateData.targetId)
       return true,entity.configParameter("gardenSettings.cooldown", 15)*2 -- lpk:ignore deposit for a while
     end
   else
