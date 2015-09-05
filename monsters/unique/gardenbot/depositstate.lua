@@ -51,7 +51,7 @@ util.debugLine(mcontroller.position(),vec2.add(mcontroller.position(),toTarget),
     move({toTarget[1], toTarget[2]+1})
   end
 
-  return stateData.timer < 0,2
+  return stateData.timer < 0
 end
 --------------------------------------------------------------------------------
 function depositState.findTargetPosition(position)

@@ -22,6 +22,7 @@
       "/scripts/util.lua",
       "/scripts/vec2.lua",
       "/scripts/inventoryManager.lua",
+      "/scripts/harvestPools.lua",
       
       "/monsters/unique/gardenbot/mineState.lua",
       "/monsters/unique/gardenbot/plantState.lua",

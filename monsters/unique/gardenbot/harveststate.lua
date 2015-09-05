@@ -168,29 +168,42 @@ function harvestState.harvestFarmable(oId) -- rewritten by LoPhatKao june2015
   if world.farmableStage then stage = world.farmableStage(oId) end
   local interactions = world.callScriptedEntity(oId, "entity.configParameter", "stages",nil)
   if stage ~= nil and interactions ~= nil and interactions[stage+1].harvestPool ~= nil then
-  -- recreate treasurepools - cant find way to access them
-	local s = interactions[stage+1].harvestPool
-	local pname = string.sub(s,0,string.find(s,"Harvest")-1)
-	local numRnd = percentile()
-	if numRnd < 0.3 then numRnd = 3 elseif numRnd < 0.7 then numRnd = 2 else numRnd = 1 end
-	for i = 1,numRnd do
-		if percentile() < 0.6 then -- farmable - special cases coffee->coffeebeans + sugarcane->sugar
-		  local oname = pname
-			if oname == "coffee" then oname = "coffeebeans" end
-			if oname == "sugarcane" then oname = "sugar" end
-			world.spawnItem(oname,{pos[1], pos[2] + i},1)
-			
-      if self.harvest[string.lower(oname)] == nil then self.harvest[string.lower(oname)] = true end
-		end
-		if percentile() < 0.2 then -- seed
-			world.spawnItem(pname.."seed",{pos[1], pos[2] + i},1)
-			forceSeed = false
-		end
-		if percentile() < 0.2 then -- plantfibre
-			world.spawnItem("plantfibre",{pos[1], pos[2] + i},1)
-		end
-	
-	end
+
+    local hpname = interactions[stage+1].harvestPool
+    -- try pleased giraffe method
+    if world.spawnTreasure and world.spawnTreasure(pos,hpname) then world.breakObject(oId, true) return end
+    -- try lpk's workaround
+    if harvestPools.spawnTreasure and harvestPools.spawnTreasure(pos,hpname) then world.breakObject(oId, true) return end
+
+    -- recreate vanilla harvestpools - cant find way to access them (in spirited)
+    -- only works cause vanilla is pretty standardized
+    -- check item is valid before trying to spawn - total unknowns will only drop plantfibre then seed on break
+    local pname = string.sub(hpname,0,string.find(hpname,"Harvest")-1)
+    local numRnd = 1
+    if percentile() <= 0.3 then numRnd = 3 else numRnd = 2 end
+    for i = 1,numRnd do
+      if percentile() < 0.6 then -- farmable 
+        local oname = pname
+        -- special cases coffee->coffeebeans + sugarcane->sugar
+        if pname == "coffee" then oname = "coffeebeans" end
+        if pname == "sugarcane" then oname = "sugar" end
+        
+        if string.len(world.itemType(oname)) > 0 then -- itemtype returns "" for invalid, len sees "" as 0 
+          world.spawnItem(oname,{pos[1], pos[2] + i},1)
+          if self.harvest[string.lower(oname)] == nil then self.harvest[string.lower(oname)] = true end
+        end
+      end
+      if percentile() < 0.2 then -- seed
+        if string.len(world.itemType(pname.."seed")) > 0 then
+          world.spawnItem(pname.."seed",{pos[1], pos[2] + i},1)
+          forceSeed = false
+        end
+      end
+      if percentile() < 0.2 then -- plantfibre
+        world.spawnItem("plantfibre",{pos[1], pos[2] + i},1)
+      end
+    
+    end
   end
 	
   world.breakObject(oId,not forceSeed) -- break plant, false force drops 1 seed
