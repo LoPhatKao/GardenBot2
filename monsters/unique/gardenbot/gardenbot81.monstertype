@@ -24,6 +24,7 @@
       "/scripts/inventoryManager.lua",
       "/scripts/harvestPools.lua",
       
+      "/monsters/unique/gardenbot/waterState.lua",
       "/monsters/unique/gardenbot/mineState.lua",
       "/monsters/unique/gardenbot/plantState.lua",
       "/monsters/unique/gardenbot/harvestState.lua",

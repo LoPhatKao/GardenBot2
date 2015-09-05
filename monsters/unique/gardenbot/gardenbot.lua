@@ -5,6 +5,11 @@ profilerApi = {}
 --------------------------------------------------------------------------------
 function isGardenbot() return true end
 --------------------------------------------------------------------------------
+function isPleasedGiraffe() 
+if world.spawnTreasure and world.objectSpaces then return true end 
+return false 
+end
+--------------------------------------------------------------------------------
 function gardenbot.init(args)
   entity.setDeathParticleBurst("deathPoof")
   entity.setAnimationState("movement", "idle")
@@ -80,7 +85,12 @@ function canReachTarget(target, ignoreLOS)
   local collision = false
   local ep = mcontroller.position()
 
-  local blocks = world.collisionBlocksAlongLine(ep, position, "Any", 2)
+  local blocks
+  if isPleasedGiraffe() then 
+   blocks = world.collisionBlocksAlongLine(ep, position,{"Null","Block","Dynamic"}, 2)
+  else
+   blocks = world.collisionBlocksAlongLine(ep, position, "Any", 2)
+  end
   collision = blocks[1] ~= nil
   if string.find(self.searchType, 'lumber$') then collision = #blocks == 2 end
   local fovHeight = entity.configParameter("gardenSettings.fovHeight")
@@ -275,8 +285,10 @@ function willFall(direction)
     math.floor(position[1] + bounds[1]), math.ceil(position[2] + bounds[2] - 1),
     math.ceil(position[1] + bounds[3]), math.ceil(position[2] + bounds[2])
   }
-  if world.rectTileCollision(groundRegion, "Any") then
-    return false
+  if isPleasedGiraffe() then 
+  if world.rectTileCollision(groundRegion, {"Null","Block","Dynamic","Platform"}) then return false end
+  else
+  if world.rectTileCollision(groundRegion, "Any") then return false end
   end
   return true
 end

@@ -30,6 +30,7 @@
       "/monsters/unique/gardenbot/depositState.lua",
       "/monsters/unique/gardenbot/returnState.lua",
       "/monsters/unique/gardenbot/idleState.lua",
+      "/monsters/unique/gardenbot/waterState.lua",
       "/monsters/unique/gardenbot/tillState.lua"
     ],
 

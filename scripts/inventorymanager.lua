@@ -22,7 +22,7 @@ if inventoryManager == nil or inventoryManager.v == nil or inventoryManager.v < 
 
       function self.inventoryCount(args)
         local inv = storage.inventoryManager
-        return table.maxn(inv)
+        return #inv--table.maxn(inv)
       end
       
       function self.findMatch(name, ignore, value)

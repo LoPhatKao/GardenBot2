@@ -45,10 +45,10 @@ util.debugLine(mcontroller.position(),vec2.add(mcontroller.position(),toTarget),
       --local items = self.inv.remove({all = true})
       --local result = world.callScriptedEntity(stateData.targetId, "add", items)
       --self.inv.add(seeds)
-      self.inv.putInContainer(stateData.targetId)
-      world.containerClose(stateData.targetId)
 --      chatNearbyPlayerOrBot()
-      return true,cooldown(120) -- 60-120sec   
+      world.containerClose(stateData.targetId)
+      self.inv.putInContainer(stateData.targetId)
+--      return true,math.random(60,120) -- 60-120sec   
     end
   else
     move({toTarget[1], toTarget[2]+1})

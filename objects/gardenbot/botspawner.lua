@@ -1,6 +1,7 @@
 function init(virtual)
   if not virtual then
     entity.setInteractive(true)
+--    world.logInfo("\n-world-\n %s\n-entity-\n %s\n-mcontroller-\n %s",world,entity,mcontroller)
   end
 end
 

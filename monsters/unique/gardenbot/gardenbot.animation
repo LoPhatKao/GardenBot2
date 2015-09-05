@@ -284,6 +284,7 @@
     "grass" : ["/sfx/blocks/footstep_tallgrass.wav"],
     "till" : ["/sfx/tools/pickaxe_hit.wav"],
     "mine" : ["/sfx/tools/drill_hit.wav"],
+    "water": ["/sfx/blocks/water_getout.wav"],
     "dead" : ["/sfx/npc/unique/robotboss_deathwithstatic.wav"]
   }
 }

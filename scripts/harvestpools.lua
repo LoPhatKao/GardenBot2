@@ -24,7 +24,7 @@ function harvestPools.spawnTreasure (pos, poolname, level, seed) -- i'm ignoring
       local maxrnd = harvestPools.numRounds(tp.poolRounds)
       for i = 1, maxrnd do
         local ritem = tp.pool[math.random(1,#tp.pool)]
-        if math.random() <= harvestPools.poolWeight(ritem) then
+        if math.random() <= harvestPools.poolWeight(ritem) or (i==maxrnd and not didSpawn) then
           harvestPools.doSpawnItem(pos,ritem.item)
           didSpawn = true
         end
@@ -326,7 +326,7 @@ wildsilverleafHarvest={fill={{item="silverleafseed"}},pool={{weight=0.6,item="si
 yellowfootHarvest={fill={{item="yellowfootseed"}},pool={{weight=0.6,item="yellowfoot"},{weight=0.2,item="yellowfootseed"},{weight=0.2,item="plantfibre"}},poolRounds={{0.5,0},{0.5,1}}},
 wildyellowfootHarvest={fill={{item="yellowfootseed"}},pool={{weight=0.6,item="yellowfoot"},{weight=0.2,item="plantfibre"}},poolRounds={{0.5,0},{0.5,1}}},
 --ise3plants
-arkaentree={fill={{item="arkaentree"},{item="arkaendart"},{item="arkaendart"},{item="plantfibre"}},pool={{weight=0.5,item="arkaentree"},{weight=0.5,item="arkaensart"}},poolRounds={{0.5,0},{0.5,1}}},
+arkaentree={fill={{item="arkaentree"},{item="arkaendart"},{item="arkaendart"},{item="plantfibre"}},pool={{weight=0.5,item="arkaentree"},{weight=0.5,item="arkaendart"}},poolRounds={{0.5,0},{0.5,1}}},
 aenemaflower={fill={{item="aenemaflower"},{item="aenemapetal"},{item="plantfibre"}},pool={{weight=0.5,item="aenemaflower"}},poolRounds={{0.5,0},{0.5,1}}},
 batterystem={fill={{item="batterystem"},{item="batterystemcharge"},{item="plantfibre"}},pool={{weight=0.5,item="batterystem"}},poolRounds={{0.5,0},{0.5,1}}},
 bellamorte={fill={{item="bellamorte"},{item="bellamortecore"},{item="bellamortecore"},{item="plantfibre"}},pool={{weight=0.5,item="bellamorte"},{weight=0.5,item="bellamortecore"}},poolRounds={{0.5,0},{0.5,1}}},

@@ -39,6 +39,7 @@ function returnState.update(dt, stateData)
   local position = mcontroller.position()
   local toTarget = world.distance(stateData.targetPosition, position)
   local distance = world.magnitude(toTarget)
+util.debugLine(mcontroller.position(),vec2.add(mcontroller.position(),toTarget),"red")
   if distance < 3 * entity.configParameter("gardenSettings.interactRange") then
     stateData.timer = -1
     self.ignoreIds = {}

@@ -4,6 +4,7 @@ simplegardenbot = {}
 grassState = {}
 tillState = {}
 mineState = {}
+waterState = {}
 returnState = {}
 idleState = {}
 --------------------------------------------------------------------------------
@@ -17,6 +18,7 @@ function simplegardenbot.init(args)
     "grassState",
     "tillState",
     "mineState",
+    "waterState",
     "moveState",
     "attackState",
     "idleState",
@@ -132,7 +134,12 @@ end
 --------------------------------------------------------------------------------
 function targInLOS(targID)
   local targPos = world.entityPosition(targID)
-  local blocksInLos = world.collisionBlocksAlongLine(mcontroller.position(), targPos, "Dynamic")
+  local blocksInLos 
+  if isPleasedGiraffe() then
+  blocksInLos = world.collisionBlocksAlongLine(mcontroller.position(), targPos, {"Null","Block","Dynamic"})
+  else
+  blocksInLos = world.collisionBlocksAlongLine(mcontroller.position(), targPos, "Dynamic")
+  end
   return #blocksInLos == 0
 end
 

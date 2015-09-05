@@ -107,7 +107,12 @@ function plantState.saplingHeightCheck(x,y,pos)
   if pos[1] % x ~= 0 then return false end -- is not aligned properly
   
   local targPos = {pos[1],pos[2]+y-1}
-  local blocksInLos = world.collisionBlocksAlongLine(pos, targPos, "Any")
+  local blocksInLos
+  if isPleasedGiraffe() then
+   blocksInLos = world.collisionBlocksAlongLine(pos, targPos, {"Null","Block","Dynamic","Platform"})
+  else
+   blocksInLos = world.collisionBlocksAlongLine(pos, targPos, "Any")
+  end
   
 if self.debug and #blocksInLos > 0 then 
 local bl,tr = blocksInLos[1], vec2.add(blocksInLos[#blocksInLos],{1,1})
@@ -126,13 +131,25 @@ function plantState.plotSize(name)
   return 2,4
 end
 --------------------------------------------------------------------------------
+function plantState.objectSpaceSort(a,b)
+ if a[2] == b[2] then return a[1] < b[1] end
+ return a[2] < b[2]
+end
+
 function plantState.addToMemory(name, pos)
   if storage.seedMemory[name] ~= nil then return nil end
   local seedIds = world.objectQuery(pos, 0, {name = name})
   if seedIds[1] then
-    local bounds = world.callScriptedEntity(seedIds[1], "entity.boundBox")
-    local plot = {(bounds[3] - bounds[1]) - 2,(bounds[4] - bounds[2]) - 2}
---    world.logInfo("%s%s",name,plot)
+  local plot,bounds
+  if isPleasedGiraffe() then
+--  world.logInfo("%s - %s",world.entityName(seedIds[1]),world.objectSpaces(seedIds[1]))
+    bounds = world.objectSpaces(seedIds[1]) table.sort(bounds,plantState.objectSpaceSort)
+    plot = {(bounds[#bounds][1] - bounds[1][1])+1,(bounds[#bounds][2] - bounds[1][2])+1}
+  else
+    bounds = world.callScriptedEntity(seedIds[1], "entity.boundBox")
+    plot = {(bounds[3] - bounds[1]) - 2,(bounds[4] - bounds[2]) - 2}
+  end
+    world.logInfo("%s %s \n%s",name,plot,bounds)
     storage.seedMemory[name] = plot
   end
 end

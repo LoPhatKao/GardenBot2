@@ -175,7 +175,7 @@ function harvestState.harvestFarmable(oId) -- rewritten by LoPhatKao june2015
     local hpname = interactions[stage+1].harvestPool
     local stageReset = interactions[stage+1].resetToStage == nil
     -- try pleased giraffe method
-    if world.spawnTreasure and world.spawnTreasure(pos,hpname) then world.breakObject(oId, true) return end
+    if isPleasedGiraffe() then world.spawnTreasure(pos,hpname,10) world.breakObject(oId, stageReset) return end
     -- try lpk's workaround
     if harvestPools.spawnTreasure and harvestPools.getPool(hpname) then 
     hpst=harvestPools.spawnTreasure(pos,hpname) 
