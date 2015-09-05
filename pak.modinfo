@@ -1,11 +1,12 @@
 {
   "name" : "GardenBot",
-  "version" : "Beta v. Enraged Koala",
+  "version" : "v. Spirited Giraffe",
   "path" : ".",
   "dependencies" : [],
   "metadata" : {
     "author" : "tynaut",
+    "updateBy" : "LoPhatKao",
     "description" : "The automated gardening bot.",
-    "version" : "1.2.0"
+    "version" : "2.0"
   }
 }

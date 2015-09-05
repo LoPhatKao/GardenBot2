@@ -27,6 +27,8 @@
       "/monsters/unique/gardenbot/harvestState.lua",
       "/monsters/unique/gardenbot/gatherState.lua",
       "/monsters/unique/gardenbot/depositState.lua",
+      "/monsters/unique/gardenbot/returnState.lua",
+      "/monsters/unique/gardenbot/idleState.lua",
       "/monsters/unique/gardenbot/grassState.lua"
     ],
 
@@ -79,19 +81,43 @@
       "statusEffects" : [ ]
     },
 
-    "statusParameters" : {
-      "baseMaxHealth" : 10,
-      "bodyMaterialKind" : "robotic",
-      "damageConfig" : "/monsters/unique/gardenbot/damage.config"
+    "statusSettings" : {
+      "statusProperties" : {
+        "targetMaterialKind" : "robotic"
+      },
+
+      "appliesEnvironmentStatusEffects" : false,
+      "minimumLiquidStatusEffectPercentage" : 0.1,
+
+      "primaryScriptSources" : [
+        "/stats/monster_primary.lua"
+      ],
+      "primaryScriptDelta" : 0,
+
+      "stats" : {
+        "maxHealth" : {
+          "baseValue" : 32
+        },
+        "protection" : {
+          "baseValue" : 1.0
+        },
+        "healthRegen" : {
+          "baseValue" : 0.0
+        },
+        "poisonImmunity" : {
+          "baseValue" : 1.0
+        }
+      },
+
+      "resources" : {
+        "health" : {
+          "maxStat" : "maxHealth",
+          "deltaStat" : "healthRegen",
+          "defaultPercentage" : 100
+        }
+      }
     },
 
-    "inateStatusEffects" : [
-      {
-        "kind" : "Protection",
-        "amount" : 0.1
-      }
-    ],
-    
 
     "mouthOffset" : [0, 0],
     "feetOffset" : [0, -8],

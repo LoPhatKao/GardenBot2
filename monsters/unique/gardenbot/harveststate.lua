@@ -2,7 +2,7 @@
 harvestState = {}
 --------------------------------------------------------------------------------
 function harvestState.enter()
-  local position = entity.position()
+  local position = mcontroller.position()
   local target = nil
   local type = nil
   if string.find(self.searchType, 'farm$') then 
@@ -39,23 +39,25 @@ function harvestState.farmUpdate(dt, stateData)
     return true
   end
   
-  local position = entity.position()
+  local position = mcontroller.position()
   local toTarget = world.distance(stateData.targetPosition, position)
   local distance = world.magnitude(toTarget)
+  util.debugLine(mcontroller.position(),vec2.add(mcontroller.position(),toTarget),"red")
   if distance < entity.configParameter("gardenSettings.interactRange") then
     entity.setAnimationState("movement", "work")
-    entity.setFacingDirection(util.toDirection(toTarget[1]))
+    mcontroller.controlFace(util.toDirection(toTarget[1]))
     if not stateData.located then
       stateData.located = true
       stateData.timer = entity.randomizeParameterRange("gardenSettings.harvestTime")
     elseif stateData.timer < 0 then
-      local result = harvestState.harvestFarmable(stateData.targetId)
+      if entity.hasSound("work") then entity.playSound("work") end
+      harvestState.harvestFarmable(stateData.targetId)
     end
   else
-    move(util.toDirection(toTarget[1]))
+    move(toTarget)
   end
 
-  return stateData.timer < 0
+  return stateData.timer < 0, entity.randomizeParameterRange("gardenSettings.harvestTime")
 end
 --------------------------------------------------------------------------------
 function harvestState.findFarmPosition(position)
@@ -63,13 +65,13 @@ function harvestState.findFarmPosition(position)
   if string.find(self.searchType, '^linear') then
     local p1 = vec2.add({-self.searchDistance, 0}, position)
     local p2 = vec2.add({self.searchDistance, 0}, position)
-    objectIds = world.objectLineQuery(p1, p2, { callScript = "entity.configParameter", callScriptArgs = {"category"}, callScriptResult = "farmable" })
+    objectIds = world.objectLineQuery(p1, p2, { callScript = "entity.configParameter", callScriptArgs = {"category"}, callScriptResult = "farmable",order = "nearest" })
   elseif string.find(self.searchType, '^radial') then
-    objectIds = world.objectQuery(position, self.searchDistance, { callScript = "entity.configParameter", callScriptArgs = {"category"}, callScriptResult = "farmable" })
+    objectIds = world.objectQuery(position, self.searchDistance, { callScript = "entity.configParameter", callScriptArgs = {"category"}, callScriptResult = "farmable",order = "nearest" })
   end
-  if entity.configParameter("gardenSettings.efficiency") then
-    table.sort(objectIds, distanceSort)
-  end
+--  if entity.configParameter("gardenSettings.efficiency") then
+--    table.sort(objectIds, distanceSort)
+--  end
   for _,oId in pairs(objectIds) do
     local oPosition = world.entityPosition(oId)
     if canReachTarget(oId) and harvestState.canHarvest(oId) then
@@ -86,28 +88,32 @@ function harvestState.lumberUpdate(dt, stateData)
     return true,entity.configParameter("gardenSettings.cooldown", 15)
   end
   
-  local position = entity.position()
+  local position = mcontroller.position()
   local toTarget = world.distance(stateData.targetPosition, position)
   local distance = world.magnitude(toTarget)
+util.debugLine(mcontroller.position(),vec2.add(mcontroller.position(),toTarget),"red")
   if distance < entity.configParameter("gardenSettings.interactRange") then
     if not stateData.located then
       stateData.located = true
       stateData.timer = 0
     end
     if stateData.timer <= 0 then
-      entity.setFacingDirection(util.toDirection(toTarget[1]))
+ --     entity.setFacingDirection(util.toDirection(toTarget[1]))
+      mcontroller.controlFace(util.toDirection(toTarget[1]+1)) --lpk: +1 to face center of tree
       entity.setAnimationState("attack", "melee")
       stateData.timer = entity.randomizeParameterRange("gardenSettings.harvestTime")
-      world.damageTiles({stateData.targetPosition}, "foreground", position, "plantish", 2)
+      world.damageTiles({stateData.targetPosition}, "foreground", position, "plantish", 1)
+      world.damageTiles({vec2.add(stateData.targetPosition,{0,-1})}, "foreground", position, "plantish", 1)
       stateData.count = stateData.count + 1
+      if entity.hasSound("work") then entity.playSound("work") end
     end  
   else
     local dy = entity.configParameter("gardenSettings.fovHeight") / 2
-    move({util.toDirection(toTarget[1]), toTarget[2] + dy})
+    move({toTarget[1], toTarget[2] + dy})
   end
 
   if stateData.timer < 0 or stateData.count > 5 then
-    self.ignore[stateData.targetId] = true
+    self.ignoreIds[stateData.targetId] = true
     return true,entity.configParameter("gardenSettings.cooldown", 15)
   end
   return false
@@ -118,17 +124,17 @@ function harvestState.findLumberPosition(position)
   if string.find(self.searchType, '^linear') then
     local p1 = vec2.add({-self.searchDistance, 0}, position)
     local p2 = vec2.add({self.searchDistance, 0}, position)
-    objectIds = world.entityLineQuery(p1, p2, {notAnObject = true})
+    objectIds = world.entityLineQuery(p1, p2, {notAnObject = true,order = "nearest"})
   elseif string.find(self.searchType, '^radial') then
-    objectIds = world.entityQuery(position, self.searchDistance, {notAnObject = true})
+    objectIds = world.entityQuery(position, self.searchDistance, {notAnObject = true,order = "nearest"})
   end
-  if entity.configParameter("gardenSettings.efficiency") then
-    table.sort(objectIds, distanceSort)
-  end
+--  if entity.configParameter("gardenSettings.efficiency") then
+--    table.sort(objectIds, distanceSort)
+--  end
   for _,oId in pairs(objectIds) do
     local oPosition = world.entityPosition(oId)
     oPosition[2] = oPosition[2] + 1
-    if world.entityType(oId) == "plant" and canReachTarget(oId) and not self.ignore[oId] then 
+    if world.entityType(oId) == "plant" and canReachTarget(oId) and not self.ignoreIds[oId] then 
       return { targetId = oId, targetPosition = oPosition }
     end
   end
@@ -139,13 +145,58 @@ end
 function harvestState.canHarvest(oId)
   local stage = nil
   if world.farmableStage then stage = world.farmableStage(oId) end
-  local interactions = world.callScriptedEntity(oId, "entity.configParameter", "interactionTransition", nil)
-  if stage ~= nil and interactions[tostring(stage)] ~= nil then
+--  local interactions = world.callScriptedEntity(oId, "entity.configParameter", "interactionTransition", nil)
+  local interactions = world.callScriptedEntity(oId, "entity.configParameter", "stages",nil)--..tostring(stage+1)..".harvestPool", nil)
+--  if interactions then world.logInfo("%d : %s",stage,interactions[stage+1].harvestPool) end
+  if stage ~= nil and interactions ~= nil and interactions[stage+1].harvestPool ~= nil then
       return true
   end
   return false
 end
 --------------------------------------------------------------------------------
+function percentile(pct)
+  if pct == nil then pct = 1 end
+  math.randomseed(os.time()*math.random())
+  return (1-(math.random(100)/100))*pct
+end
+
+function harvestState.harvestFarmable(oId) -- rewritten by LoPhatKao june2015
+--	world.logInfo("trying to harvest")
+  local forceSeed = true
+  local pos = world.entityPosition(oId)
+  local stage = nil
+  if world.farmableStage then stage = world.farmableStage(oId) end
+  local interactions = world.callScriptedEntity(oId, "entity.configParameter", "stages",nil)
+  if stage ~= nil and interactions ~= nil and interactions[stage+1].harvestPool ~= nil then
+  -- recreate treasurepools - cant find way to access them
+	local s = interactions[stage+1].harvestPool
+	local pname = string.sub(s,0,string.find(s,"Harvest")-1)
+	local numRnd = percentile()
+	if numRnd < 0.3 then numRnd = 3 elseif numRnd < 0.7 then numRnd = 2 else numRnd = 1 end
+	for i = 1,numRnd do
+		if percentile() < 0.6 then -- farmable - special cases coffee->coffeebeans + sugarcane->sugar
+		  local oname = pname
+			if oname == "coffee" then oname = "coffeebeans" end
+			if oname == "sugarcane" then oname = "sugar" end
+			world.spawnItem(oname,{pos[1], pos[2] + i},1)
+			
+      if self.harvest[string.lower(oname)] == nil then self.harvest[string.lower(oname)] = true end
+		end
+		if percentile() < 0.2 then -- seed
+			world.spawnItem(pname.."seed",{pos[1], pos[2] + i},1)
+			forceSeed = false
+		end
+		if percentile() < 0.2 then -- plantfibre
+			world.spawnItem("plantfibre",{pos[1], pos[2] + i},1)
+		end
+	
+	end
+  end
+	
+  world.breakObject(oId,not forceSeed) -- break plant, false force drops 1 seed
+end
+
+--[[  --lpk: old func, drops used to be in the *seed.object itself
 function harvestState.harvestFarmable(oId)
   local stage = "2"
   if world.farmableStage then stage = world.farmableStage(oId) end
@@ -173,3 +224,4 @@ function harvestState.harvestFarmable(oId)
     end
     world.callScriptedEntity(oId, "entity.break")
 end
+--]]

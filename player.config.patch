@@ -1,0 +1,11 @@
+[
+ {"op":"add","path":"/defaultBlueprints/tier1/-","value":{ "item" : "gardenbotcropbin" }},
+ {"op":"add","path":"/defaultBlueprints/tier1/-","value":{ "item" : "gardenbotwoodshed" }},
+ {"op":"add","path":"/defaultBlueprints/tier1/-","value":{ "item" : "gbotfence1" }},
+ {"op":"add","path":"/defaultBlueprints/tier1/-","value":{ "item" : "gbotfence2" }},
+ {"op":"add","path":"/defaultBlueprints/tier1/-","value":{ "item" : "gbotfence3" }},
+ {"op":"add","path":"/defaultBlueprints/tier1/-","value":{ "item" : "gardenbotv80gspawner" }},
+ {"op":"add","path":"/defaultBlueprints/tier1/-","value":{ "item" : "gardenbotv81gspawner" }},
+ {"op":"add","path":"/defaultBlueprints/tier1/-","value":{ "item" : "gardenbotv82gspawner" }},
+ {"op":"add","path":"/defaultBlueprints/tier1/-","value":{ "item" : "gardenbotv86gspawner" }}
+]

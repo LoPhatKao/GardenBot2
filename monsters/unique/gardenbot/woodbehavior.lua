@@ -1,26 +1,22 @@
-delegate.create("simplegardenbot")
+delegate.create("simplelumberbot")
 --------------------------------------------------------------------------------
-simplegardenbot = {}
+simplelumberbot = {}
 grassState = {}
 tillState = {}
-mineState = {}
-returnState = {}
-idleState = {}
 --------------------------------------------------------------------------------
-function simplegardenbot.init(args)
+function simplelumberbot.init(args)
   self.sensors = sensors.create()
   self.state = stateMachine.create({
-    "gatherState",
+  	"grassState",
+--  	"tillState", -- test till
     "plantState",
     "harvestState",
+    "gatherState",
     "depositState",
-    "grassState",
-    "tillState",
-    "mineState",
-    "moveState",
     "attackState",
-    "idleState",
-    "returnState"
+  	"returnState",
+    "moveState",
+    "idleState"
   })
   self.state.leavingState = function(stateName)
     entity.setAnimationState("movement", "idle")
@@ -34,46 +30,109 @@ function simplegardenbot.init(args)
   
   self.stuckCount = 0
   self.stuckPosition = {}
-
+  self.jumpTimer = 5
+  self.csmTimer = 1
 end
 --------------------------------------------------------------------------------
-function update(dt)
-world.loadRegion({mcontroller.position()[1]-5, mcontroller.position()[2]-5,mcontroller.position()[1]+5,mcontroller.position()[2]+5})
-self.dt = dt
-simplegardenbot.main()
-end
-
-function simplegardenbot.main()
+function simplelumberbot.main()
   self.state.update(self.dt)--entity.dt())
   self.sensors.clear()
   if self.debug then
     world.debugText("%s",self.state.stateDesc(),vec2.add(mcontroller.position(),{-3,1.5}),"white")
   end
 end
+
+function update(dt)--
+world.loadRegion({mcontroller.position()[1]-5, mcontroller.position()[2]-5,mcontroller.position()[1]+5,mcontroller.position()[2]+5})
+	self.dt = dt
+	simplelumberbot.main()
+end
 --------------------------------------------------------------------------------
 function move(direction)
-  if type(direction) == "table" then direction = direction[1] end
-  local mcPos = mcontroller.position()
+local moveDir, moveY = 0,0
+local mcPos = mcontroller.position()
+  if type(direction) == "table" then 
+	moveDir = direction[1]
+	moveY = direction[2]
+  end
+  if type(direction) == "number" then moveDir = direction end
+    
+  --lpk: all the states call move, check for fence here
+  moveDir = touchingFenceDirection(mcPos,moveDir) -- in gardenbot.lua
 
- --lpk: all the states call move, check for forced direction here
- -- if willFall(direction) then direction = -direction end  -- try not to fall
-  direction = touchingFenceDirection(mcPos,direction)-- fence last
- 
-  entity.setAnimationState("movement", "move")
-  mcontroller.controlMove(direction, direction == mcontroller.facingDirection())
-  mcontroller.controlFace(direction)
+  local run = (mcontroller.facingDirection() == moveDir)
+
+  if self.jumpTimer <= 0 then
+    if jumpThresholdX == nil then jumpThresholdX = 4 end
+
+    -- We either need to be blocked by something, the target is above us and
+    -- we are about to fall, or the target is significantly high above us
+    local doJump = false
+    if isBlocked() then
+      doJump = true
+--	  elseif self.stuckCount > 4 then
+--      doJump = true
+    elseif (moveY >= 0 and math.abs(moveDir) > 7) and willFall() then
+      doJump = true
+    elseif (math.abs(moveDir) < jumpThresholdX and moveY > entity.configParameter("jumpTargetDistance")) then
+      doJump = true
+    end
+
+    if doJump then
+      controlJump()
+    end
+  else
+    if not mcontroller.onGround() or (mcontroller.liquidMovement() and moveY >0)then
+	  mcontroller.controlHoldJump()
+	else
+      self.jumpTimer = self.jumpTimer - self.dt
+	end
+  end -- jump
+
+  if moveY < 0 then
+    mcontroller.controlDown()
+  end
+  
+  if self.csmTimer <= 0 then
+	  local csm = calculateSeparationMovement()
+	  if csm == -(util.toDirection(moveDir)) then moveDir = csm * math.abs(moveDir) end
+	  self.csmTimer = self.dt * 3
+  else
+    self.csmTimer = self.csmTimer - self.dt  
+  end
+  
+  if not mcontroller.onGround() then
+    entity.setAnimationState("movement", "jump")
+  elseif run then
+    entity.setAnimationState("movement", "run")
+  else
+    entity.setAnimationState("movement", "walk")
+  end
+
+--  util.debugLine(mcontroller.position(), vec2.add(mcontroller.position(), vec2.mul({moveDir,moveY}, 3)), "green")
+  util.debugLine({mcPos[1],mcPos[2]+math.ceil(mcontroller.boundBox()[2]) }, vec2.add(mcontroller.position(),{moveDir,moveY}), "green")
+  
+  mcontroller.controlMove(moveDir, run)
+--  mcontroller.controlFace(moveDir)
   checkStuck()
-  self.lastMoveDirection = util.toDirection(direction)
+  self.lastMoveDirection = util.toDirection(moveDir)
   if self.stuckCount > entity.configParameter("stuckCountMax",15) then
     self.state.pickState()
   end
 end
+
+function controlJump()
+  if mcontroller.onGround() then
+    mcontroller.controlJump()
+	self.jumpTimer = entity.randomizeParameterRange("jumpTime")
+  end
+end
+
 --------------------------------------------------------------------------------
 moveState = {}
 --------------------------------------------------------------------------------
 function moveState.enter()
   local direction = mcontroller.facingDirection()
-
   return {
     timer = entity.randomizeParameterRange("moveTimeRange"),
     direction = direction
@@ -86,22 +145,22 @@ function moveState.update(dt, stateData)
   if self.sensors.collisionSensors.collision.any(true) then
     stateData.direction = -stateData.direction
   end
-
---[[  -- lpk: replaced in move()  
+--[[  
   local b,t = canReachTarget(vec2.add(mcontroller.position(), {stateData.direction, 0}))
   if not b and t ~= nil then
     local distance = world.distance(t, mcontroller.position())
     stateData.direction = -util.toDirection(distance[1])
+	stateData.timer = stateData.timer + 0.5
   end
 --]]
 --  stateData.direction = touchingFenceDirection(mcontroller.position(),stateData.direction)
---[[
+
   if mcontroller.onGround() and
      not self.sensors.nearGroundSensor.collisionTrace.any(true) and
      self.sensors.midGroundSensor.collisionTrace.any(true) then
     mcontroller.controlDown()
   end
---]]
+
   move(stateData.direction)
 
   stateData.timer = stateData.timer - dt
@@ -114,12 +173,21 @@ end
 --------------------------------------------------------------------------------
 attackState = {}
 --------------------------------------------------------------------------------
+function attackState.enterWith(targetId)
+  if type(targetId) ~= "number" then return nil end -- lpk: fix trying to use returnState params
+  if targetId == 0 then return nil end
+
+  attackState.setAggressive(targetId)
+--world.logInfo("attacked by: %s",targetId)
+  return { timer = entity.configParameter("attackTargetHoldTime",5) }
+end
+--------------------------------------------------------------------------------
 function attackState.enter()
   local findDist = entity.configParameter("attackSearchRadius",10)
 
 --  if util.trackTarget(findDist,findDist/2,nil) then --  also targets player boo :"(
   if attackState.findValidTarget(mcontroller.position(),findDist) then
---world.logInfo("attacking: %s",self.targetId)
+world.logInfo("attacking: %s",self.targetId)
     return { timer = entity.configParameter("attackTargetHoldTime",5) } 
   end
   
@@ -156,18 +224,9 @@ function attackState.findValidTarget(pos,dist)
   return false
 end
 --------------------------------------------------------------------------------
-function attackState.enterWith(targetId)
-  if type(targetId) ~= "number" then return nil end -- lpk: fix trying to use returnState params
-  if targetId == 0 then return nil end
-
-  attackState.setAggressive(targetId)
-
-  return { timer = entity.configParameter("attackTargetHoldTime") }
-end
---------------------------------------------------------------------------------
 function attackState.update(dt, stateData)
   util.trackExistingTarget()
-
+  
   if self.attackHoldTimer ~= nil then
     self.attackHoldTimer = self.attackHoldTimer - dt
     if self.attackHoldTimer > 0 then
@@ -178,22 +237,25 @@ function attackState.update(dt, stateData)
   end
 
   if self.targetPosition ~= nil then
-    local toTarget = world.distance(self.targetPosition, mcontroller.position())
-
-    if world.magnitude(toTarget) < entity.configParameter("attackDistance") then
+    local armOffset = vec2.add(mcontroller.position(),{0,(mcontroller.boundBox()[2])/2})
+    local toTarget = world.distance(self.targetPosition, armOffset)
+    util.debugLine(armOffset,vec2.add(mcontroller.position(),toTarget),"red")
+    local targDist = world.magnitude(toTarget)
+    
+    if targDist < entity.configParameter("attackDistance",1) then
       attackState.setAttackEnabled(true)
       stateData.timer = entity.configParameter("attackTargetHoldTime",5)
       if entity.hasSound("attack") then entity.playSound("attack") end
       maybeKickPetball()
     else
       attackState.setAttackEnabled(false)
-      move(util.toDirection(toTarget[1]))
+      move(toTarget)--util.toDirection(toTarget[1]))
     end
   end
 
   if self.targetId == nil then
     stateData.timer = 0--stateData.timer - dt
-  else--if not canReachTarget(self.targetId) then -- bounce on fences like angry dog
+  else--if not canReachTarget(self.targetId) then
     stateData.timer = stateData.timer - dt
 --  else
 --    stateData.timer = entity.configParameter("attackTargetHoldTime",5)
@@ -202,7 +264,7 @@ function attackState.update(dt, stateData)
   if stateData.timer <= 0 then
     attackState.setAttackEnabled(false)
     attackState.setAggressive(nil)
-    return true
+    return true,entity.configParameter("attackTargetHoldTime",5)
   else
     return false
   end
@@ -210,12 +272,12 @@ end
 --------------------------------------------------------------------------------
 function attackState.setAttackEnabled(enabled)
   if enabled then
-    entity.setAnimationState("movement", "attack")
-    self.attackHoldTimer = entity.configParameter("attackHoldTime")
+    entity.setAnimationState("attack", "melee")
+    self.attackHoldTimer = entity.configParameter("attackHoldTime",2)
+--    if maybeKickPetball() then return end
   else
-    entity.setAnimationState("movement", "aggro")
+    entity.setAnimationState("movement", "idle")
   end
-
   entity.setDamageOnTouch(enabled)
 end
 --------------------------------------------------------------------------------
@@ -223,7 +285,7 @@ function attackState.setAggressive(targetId)
   self.targetId = targetId
 
   if targetId ~= nil then
-    entity.setAnimationState("movement", "aggro")
+    entity.setAnimationState("attack", "melee")
     entity.setAggressive(true)
   else
     entity.setAnimationState("movement", "idle")

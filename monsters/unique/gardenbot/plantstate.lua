@@ -2,7 +2,7 @@
 plantState = {}
 --------------------------------------------------------------------------------
 function plantState.enter()
-  local position = entity.position()
+  local position = mcontroller.position()
   local target = plantState.findPosition(position)
   if target ~= nil then
     return {
@@ -21,12 +21,14 @@ function plantState.update(dt, stateData)
     return true
   end
   
-  local position = entity.position()
+  local position = mcontroller.position()
   local toTarget = world.distance(stateData.targetPosition, position)
   local distance = world.magnitude(toTarget)
+util.debugLine(mcontroller.position(),vec2.add(mcontroller.position(),toTarget),"red")
   --TODO put a delay time here
   if distance < entity.configParameter("gardenSettings.interactRange") then
-    entity.setFacingDirection(util.toDirection(toTarget[1]))
+ --   entity.setFacingDirection(util.toDirection(toTarget[1]))
+    mcontroller.controlFace(util.toDirection(toTarget[1]))
     entity.setAnimationState("movement", "work")
     if not stateData.located then
       stateData.located = true
@@ -38,8 +40,8 @@ function plantState.update(dt, stateData)
       end
       if seed ~= nil then
         --TODO fail check to add to ignored seeds
-        if world.placeObject(seed.name, stateData.targetPosition, 1, seed.data) then
-          if oId == nil then self.inv.remove({name = seed.name, count = 1, data = seed.data}) end
+        if world.placeObject(seed.name, stateData.targetPosition, 1, seed.parameters) then
+          if oId == nil then self.inv.remove({name = seed.name, count = 1, parameters = seed.parameters}) end
           plantState.addToMemory(seed.name, stateData.targetPosition)
         else
           local fp = stateData.targetPosition[1] .. "," .. stateData.targetPosition[2]
@@ -48,27 +50,43 @@ function plantState.update(dt, stateData)
           else storage.failedMemory[fp] = 1 end
           if oId ~= nil then self.inv.add(seed) end
         end
-        return true
+        return true,entity.randomizeParameterRange("gardenSettings.plantTime")
       end
     end
   else
     local dy = entity.configParameter("gardenSettings.fovHeight") / 2
-    move({util.toDirection(toTarget[1]), toTarget[2] + dy})
+    move({toTarget[1], toTarget[2] + dy})
   end
 
   return stateData.timer < 0,entity.configParameter("gardenSettings.cooldown", 15)
 end
 --------------------------------------------------------------------------------
+function plantState.saplingHeightCheck(d,pos)
+  if d ~= "S" then return d, true end -- d is a number, so is not a tree
+  if pos[1] % 3 ~= 0 then return 3, false end -- is tree, but not aligned properly
+  local targPos = {pos[1],pos[2]+19}
+  local blocksInLos = world.collisionBlocksAlongLine(pos, targPos, "Any")
+util.debugRect({pos[1],pos[2],targPos[1]+1,targPos[2]+1},"yellow")
+if self.debug and #blocksInLos > 0 then 
+local bl = blocksInLos[1]
+local tr = vec2.add(blocksInLos[#blocksInLos],{1,1})
+--util.debugRect({bl[1],bl[2],tr[1],tr[2]},"red")-- lbrt
+--util.debugLine({bl[1],bl[2]},{tr[1],tr[2]},"red") -- big red x
+--util.debugLine({tr[1],bl[2]},{bl[1],tr[2]},"red") 
+end
+  return 3,#blocksInLos == 0
+end
+
 function plantState.findPosition(position)
 
-  local direction = entity.facingDirection()
+  local direction = mcontroller.facingDirection()
   local basePosition = {
     math.floor(position[1] + 0.5),
     math.floor(position[2] + 0.5) - 1
   }
   
-  local dy = 0
-  if string.find(self.searchType, 'lumber$') then dy = -2 end
+  local dy = math.ceil(mcontroller.boundBox()[2]) -- 
+--  if string.find(self.searchType, 'lumber$') then dy = -2 end -- bleh :P
   
   for offset = 1, entity.configParameter("gardenSettings.plantDistance", 10), 1 do
     for d = -1, 2, 2 do
@@ -81,11 +99,12 @@ function plantState.findPosition(position)
       --local objects = world.objectQuery(targetPosition, 0.5)
       local ps = targetPosition[1] .. "," .. targetPosition[2]
       local failedMemory = storage.failedMemory[ps]
-      if canReachTarget(targetPosition) and (failedMemory == nil or failedMemory < 3) then
+      if not world.tileIsOccupied(targetPosition) and canReachTarget(targetPosition) and (failedMemory == nil or failedMemory < 3) then
         local seed = plantState.getSeedName()
         if seed ~= nil then
-          local d = plantState.plotSize(seed.name)
-          if world.placeObject("gardenbotplot" .. d, targetPosition) then
+          local s = plantState.plotSize(seed.name)
+		      local dx, shCheck = plantState.saplingHeightCheck(s,targetPosition)--lpk: if its a tree, check more stuff
+		      if targetPosition[1] % dx == 0 and shCheck and world.placeObject("gardenbotplot" .. s, targetPosition) then
             return { position = targetPosition, seed = seed.name}
           end
         end
@@ -113,13 +132,18 @@ function plantState.addToMemory(name, pos)
 end
 --------------------------------------------------------------------------------
 function plantState.getSeedName(name)
-  local position = entity.position()
+  local position = mcontroller.position()
   local search = entity.configParameter("gardenSettings.seed", "seed")
   if name ~= nil then search = name end
   local seed = nil
   seed = self.inv.findMatch(self.lastSeed, self.ignore)
   if seed == nil then seed = self.inv.findMatch(search, self.ignore) end
   if seed ~= nil then return seed,nil end
+  
+  if self.homeBin ~= nil and world.entityExists(self.homeBin) then -- check homebin before randoms
+      seed = self.inv.matchInContainer(self.homeBin, {name = search, ignore = self.ignore})
+      if seed ~= nil then return seed,self.homeBin end  
+  end
   
   local distance = 2 * self.searchDistance
   local fovHeight = entity.configParameter("gardenSettings.fovHeight")

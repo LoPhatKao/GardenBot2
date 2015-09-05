@@ -1,11 +1,16 @@
 --------------------------------------------------------------------------------
 returnState = {}
 --------------------------------------------------------------------------------
+--function returnState.enter()
+-- return returnState.enterWith({ignoreDistance = false})
+--end
+
+
 function returnState.enterWith(args)
     if self.spawnPoint == nil then self.spawnPoint = entity.configParameter("spawnPoint") end
     if self.homeBin ~= nil or self.spawnPoint ~= nil then
-      local position = entity.position()
-      local range = entity.configParameter("gardenSettings.wanderRange")
+      local position = mcontroller.position()
+      local range = entity.configParameter("gardenSettings.wanderRange") or 60
       local hPos = nil
       if self.homeBin ~= nil and world.entityExists(self.homeBin) then
         hPos = world.entityPosition(self.homeBin)
@@ -16,9 +21,9 @@ function returnState.enterWith(args)
       local distance = world.magnitude(toTarget)
       --if (type(args) == "table" and args.ignoreDistance) then world.logInfo("FORCED RETURN TO HOME") end
       if (type(args) == "table" and args.ignoreDistance) or distance > range then
-        return {
+	    return {
           targetPosition = hPos,
-          timer = entity.configParameter("gardenSettings.returnTime", 5)
+          timer = travelTime(distance)--(entity.configParameter("gardenSettings.returnTime", 15)
         }
       end
     end
@@ -30,23 +35,24 @@ function returnState.update(dt, stateData)
   if stateData.targetPosition == nil then
     return true,entity.configParameter("gardenSettings.cooldown", 15)
   end
-  
-  local position = entity.position()
+
+  local position = mcontroller.position()
   local toTarget = world.distance(stateData.targetPosition, position)
   local distance = world.magnitude(toTarget)
   if distance < 3 * entity.configParameter("gardenSettings.interactRange") then
     stateData.timer = -1
-    self.ignore = {}
+    self.ignoreIds = {}
     entity.setAnimationState("movement", "idle")
   else
-    if stateData.timer < 0 then
+    if stateData.timer < 0 and self.stuckCount > 0 then
       local p = stateData.targetPosition
-      entity.setPosition({p[1], p[2] + 3})
+      mcontroller.setPosition({p[1], p[2] + 0.5 + math.abs(mcontroller.boundBox()[2])})
+      mcontroller.setVelocity({0,-1 * world.gravity(mcontroller.position())})
       entity.setAnimationState("movement", "idle")
     else
-      move({util.toDirection(toTarget[1]), toTarget[2]})
+      move({toTarget[1], toTarget[2]})
     end
   end
 
-  return stateData.timer < 0,entity.configParameter("gardenSettings.cooldown", 15)
+  return stateData.timer < -0.5,entity.configParameter("gardenSettings.cooldown", 15)
 end

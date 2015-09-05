@@ -13,7 +13,7 @@ function onInteraction(args)
       type = entity.configParameter("botspawner.type")
     end
     parameters.persistent = true
-	parameters.damageTeam = 0
+	parameters.damageTeam = 1
     parameters.ownerUuid = args.sourceId
     parameters.level = 1
     parameters.spawnPoint = {p[1], p[2] + 1}

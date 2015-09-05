@@ -2,7 +2,7 @@
 gatherState = {}
 --------------------------------------------------------------------------------
 function gatherState.enter()
-  local position = entity.position()
+  local position = mcontroller.position()
   local target = gatherState.findTargetPosition(position)
   if target ~= nil then
     return {
@@ -21,11 +21,13 @@ function gatherState.update(dt, stateData)
     return true,entity.configParameter("gardenSettings.cooldown", 15)
   end
   
-  local position = entity.position()
+  local position = mcontroller.position()
   local toTarget = world.distance(stateData.targetPosition, position)
   local distance = world.magnitude(toTarget)
+util.debugLine(mcontroller.position(),vec2.add(mcontroller.position(),toTarget),"red")
   if distance - 1 <= entity.configParameter("gardenSettings.interactRange") then
-    entity.setFacingDirection(util.toDirection(toTarget[1]))
+--    entity.setFacingDirection(util.toDirection(toTarget[1]))
+    mcontroller.controlFace(util.toDirection(toTarget[1]))
     entity.setAnimationState("movement", "work")
     if not stateData.located then
       stateData.located = true
@@ -33,13 +35,14 @@ function gatherState.update(dt, stateData)
     elseif stateData.timer < 0 then
       local r = world.takeItemDrop(stateData.targetId, entity.id())
       if r ~= nil then
-        self.inv.add({name = r.name, count = r.count, data = r.data})
+        self.inv.add({name = r.name, count = r.count, parameters = r.parameters})
         if self.seedMemory and self.seedMemory[r.name] ~= nil then self.lastSeed = r.name end
+        if entity.hasSound("gather") then entity.playSound("gather") end
       end
     end
   else
     local dy = entity.configParameter("gardenSettings.fovHeight") / 2
-    move({util.toDirection(toTarget[1]), toTarget[2] + dy})
+    move({toTarget[1], toTarget[2] + dy})
   end
 
   return stateData.timer < 0
@@ -50,13 +53,13 @@ function gatherState.findTargetPosition(position)
   if string.find(self.searchType, '^linear') then
     local p1 = vec2.add({-self.searchDistance, 0}, position)
     local p2 = vec2.add({self.searchDistance, 0}, position)
-    objectIds = world.itemDropQuery(p1, p2)
+    objectIds = world.itemDropQuery(p1, p2,{order = "nearest"})
   elseif string.find(self.searchType, '^radial') then
-    objectIds = world.itemDropQuery(position, self.searchDistance)
+    objectIds = world.itemDropQuery(position, self.searchDistance,{order = "nearest"})
   end
-  if entity.configParameter("gardenSettings.efficiency") then
-    table.sort(objectIds, distanceSort)
-  end
+--  if entity.configParameter("gardenSettings.efficiency") then
+--    table.sort(objectIds, distanceSort)
+--  end
   for _,oId in pairs(objectIds) do
     if gatherState.canGather(world.entityName(oId)) then
       local oPos = world.entityPosition(oId)
@@ -85,5 +88,6 @@ function gatherState.canGather(name)
     local match = string.match(string.lower(name), v)
     if match ~= nil then return true end
   end
+  if 1-math.random() > 0.95 then self.harvest[string.lower(name)] = true end --lpk: learn to gather it
   return false
 end

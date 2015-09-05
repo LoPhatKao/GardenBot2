@@ -23,10 +23,13 @@
       "/scripts/vec2.lua",
       "/scripts/inventoryManager.lua",
       
+      "/monsters/unique/gardenbot/mineState.lua",
       "/monsters/unique/gardenbot/plantState.lua",
       "/monsters/unique/gardenbot/harvestState.lua",
       "/monsters/unique/gardenbot/gatherState.lua",
-      "/monsters/unique/gardenbot/depositState.lua"
+      "/monsters/unique/gardenbot/depositState.lua",
+      "/monsters/unique/gardenbot/returnState.lua",
+      "/monsters/unique/gardenbot/idleState.lua"
     ],
 
     "scriptDelta" : 10,
@@ -44,8 +47,9 @@
       "fovHeight" : 2,
       "seed" : [ "seed", "avaliplant", "soybean", "bm_bamboosprout", "mushroomspore" ],
       "gatherables" : [ 
-        {"seed" : "match", "consumable" : "type", "plant" : "match"}, "wheat", "plantfibre",
-        "sugar", "straw", "money", "soybean", "bm_bamboosprout", "mushroomspore"
+        {"seed" : "match", "consumable" : "type", "plant" : "match", "ore" : "match"},
+        "wheat", "plantfibre", "sugar", "straw", "money",
+        "soybean", "bm_bamboosprout", "mushroomspore"
       ]
     },
 
@@ -79,19 +83,42 @@
       "statusEffects" : [ ]
     },
 
-    "statusParameters" : {
-      "baseMaxHealth" : 10,
-      "bodyMaterialKind" : "robotic",
-      "damageConfig" : "/monsters/unique/gardenbot/damage.config"
-    },
+    "statusSettings" : {
+      "statusProperties" : {
+        "targetMaterialKind" : "robotic"
+      },
 
-    "inateStatusEffects" : [
-      {
-        "kind" : "Protection",
-        "amount" : 0.1
+      "appliesEnvironmentStatusEffects" : false,
+      "minimumLiquidStatusEffectPercentage" : 0.1,
+
+      "primaryScriptSources" : [
+        "/stats/monster_primary.lua"
+      ],
+      "primaryScriptDelta" : 0,
+
+      "stats" : {
+        "maxHealth" : {
+          "baseValue" : 32
+        },
+        "protection" : {
+          "baseValue" : 1.0
+        },
+        "healthRegen" : {
+          "baseValue" : 0.0
+        },
+        "poisonImmunity" : {
+          "baseValue" : 1.0
+        }
+      },
+
+      "resources" : {
+        "health" : {
+          "maxStat" : "maxHealth",
+          "deltaStat" : "healthRegen",
+          "defaultPercentage" : 100
+        }
       }
-    ],
-    
+	},
 
     "mouthOffset" : [0, 0],
     "feetOffset" : [0, -8],

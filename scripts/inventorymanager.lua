@@ -1,5 +1,6 @@
-if inventoryManager == nil or inventoryManager.v == nil or inventoryManager.v < 1 then
-    inventoryManager = {v = 1}
+if inventoryManager == nil or inventoryManager.v == nil or inventoryManager.v < 2 then
+    inventoryManager = {v = 2}
+	--lpk: v 2 giraffe - rename 'data' field to 'parameters'
 
     function inventoryManager.create()
       local self = {}
@@ -45,18 +46,18 @@ if inventoryManager == nil or inventoryManager.v == nil or inventoryManager.v < 
       function self.indexOf(args)
         local inv = storage.inventoryManager
         local name = nil
-        local data = nil
+        local parameters = nil
         local k = nil
         if type(args) == "string" then
           name = args
         elseif type(args) == "table" then
           if args.name ~= nil and type(args.name) == "string" then name = args.name end
-          if args.data ~= nil then data = args.data end
+          if args.parameters ~= nil then parameters = args.parameters end
         end
 
         if name ~= nil then
           for i,v in ipairs(inv) do
-            if type(v) == "table" and v.name == name and self.deepCompare(v.data, data) then
+            if type(v) == "table" and v.name == name and self.deepCompare(v.parameters, parameters) then
               k = i
               break
             end
@@ -75,13 +76,13 @@ if inventoryManager == nil or inventoryManager.v == nil or inventoryManager.v < 
         local inv = storage.inventoryManager
         local count = 1
         local name = nil
-        local data = nil
+        local parameters = nil
         if type(args) == "string" then
           name = args
         elseif type(args) == "table" then
           if args.count ~= nil and type(args.count) == "number" then count = args.count end
           if args.name ~= nil and type(args.name) == "string" then name = args.name end
-          data = args.data
+          parameters = args.parameters
         end
         if count < 0 then return false end
         if name ~= nil then
@@ -89,7 +90,7 @@ if inventoryManager == nil or inventoryManager.v == nil or inventoryManager.v < 
           local i = self.indexOf(name)
           --TODO because stacks > 1000 just cease to exist?
           if i == nil or inv[i].count + count > 1000 then
-            table.insert(inv, {name = name, count = count, data = data })
+            table.insert(inv, {name = name, count = count, parameters = parameters })
           else
             inv[i].count = inv[i].count + count
           end
@@ -120,10 +121,10 @@ if inventoryManager == nil or inventoryManager.v == nil or inventoryManager.v < 
         elseif type(args) == "table" then
           local count = nil
           local name = nil
-          local data = nil
+          local parameters = nil
           if args.count ~= nil and type(args.count) == "number" then count = args.count end
           if args.name ~= nil and type(args.name) == "string" then name = args.name end
-          if args.data ~= nil then data = args.data end
+          if args.parameters ~= nil then parameters = args.parameters end
           if args.all ~= nil and type(args.all) == "boolean" and args.all then
             --TODO expand on this to do all w/ match
               result = inv
@@ -133,7 +134,7 @@ if inventoryManager == nil or inventoryManager.v == nil or inventoryManager.v < 
             if i ~= nil then
               if inv[i].count > count then
                 inv[i].count = inv[i].count - count
-                result = {{name = name, count = count, data = data }}
+                result = {{name = name, count = count, parameters = parameters }}
               else
                 local r = table.remove(inv, i)
                 result = {r}
@@ -154,7 +155,7 @@ if inventoryManager == nil or inventoryManager.v == nil or inventoryManager.v < 
         
         for i,v in ipairs(result) do
           if v ~= nil and v.name ~= nil then
-            world.spawnItem(v.name, args.position, v.count, v.data)
+            world.spawnItem(v.name, args.position, v.count, v.parameters)
           end
         end
       end

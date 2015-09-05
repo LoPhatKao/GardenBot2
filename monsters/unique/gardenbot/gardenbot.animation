@@ -274,5 +274,16 @@
       "time" : 0.25,
       "directives" : "fade=ffffff;0.5"
     }
+  },
+  "sounds" : {
+    "powerUp" : ["/sfx/tech/mech_jump2.wav"],
+    "powerDown" : ["/sfx/tech/mech_powerdown2.wav"],
+    "attack" : ["/sfx/projectiles/swing_electric1.wav"],
+    "work" : ["/sfx/projectiles/bubble_impact.wav"],
+    "gather" : ["/sfx/interface/item_pickup.wav"],
+    "grass" : ["/sfx/blocks/footstep_tallgrass.wav"],
+    "till" : ["/sfx/tools/pickaxe_hit.wav"],
+    "mine" : ["/sfx/tools/drill_hit.wav"],
+    "dead" : ["/sfx/npc/unique/robotboss_deathwithstatic.wav"]
   }
 }
