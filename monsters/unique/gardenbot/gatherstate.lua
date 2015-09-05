@@ -36,6 +36,7 @@ util.debugLine(mcontroller.position(),vec2.add(mcontroller.position(),toTarget),
     elseif stateData.timer < 0 then
       local r = world.takeItemDrop(stateData.targetId, entity.id())
       if r ~= nil then
+        if r.name == "sapling" then gatherState.saplingHueShift(r) end
         self.inv.add({name = r.name, count = r.count, parameters = r.parameters})
         if self.seedMemory and self.seedMemory[r.name] ~= nil then self.lastSeed = r.name end
         if entity.hasSound("gather") then entity.playSound("gather") end
@@ -47,6 +48,16 @@ util.debugLine(mcontroller.position(),vec2.add(mcontroller.position(),toTarget),
   end
 
   return stateData.timer < 0
+end
+--------------------------------------------------------------------------------
+function gatherState.saplingHueShift(it)
+local doShift = entity.configParameter("gardenSettings.saplingHueShiftCount", 1)
+  if doShift > 1 and it.parameters ~= nil and it.parameters.foliageHueShift ~= nil then
+    local newhue = it.parameters.foliageHueShift
+    newhue = newhue + (360/doShift) -- configurable # of colors - default for lumberbot is 3
+    if newhue > 180 then newhue = newhue - 360 end -- hues from -180 to 180
+    it.parameters.foliageHueShift = newhue
+  end
 end
 --------------------------------------------------------------------------------
 function gatherState.findTargetPosition(position)

@@ -7,5 +7,5 @@
     "item" : "gbotfence1",
     "count" : 1
   },
-  "groups" : [ "mod", "roboticcraftingtable", "objects", "all" ]
+  "groups" : [ "mod", "ironcraftingtable", "objects", "all" ]
 }

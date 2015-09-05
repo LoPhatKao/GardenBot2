@@ -48,6 +48,7 @@
       "searchType" : "radiallumber",
       "efficiency" : 1.0,
       "fovHeight" : 4,
+      "saplingHueShiftCount" : 3.0,
       "seed" : [ "sapling" ],
       "gatherables" : [ 
         "fullwood1", "plantfibre", "sapling", "crystal", "icecrystal", "rainbowwood", "cacti",

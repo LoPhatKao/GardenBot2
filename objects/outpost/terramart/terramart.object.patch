@@ -1,0 +1,11 @@
+[
+ {"op":"add","path":"/interactData/items/-","value":{ "item" : "gardenbotcropbin" }},
+ {"op":"add","path":"/interactData/items/-","value":{ "item" : "gardenbotwoodshed" }},
+ {"op":"add","path":"/interactData/items/-","value":{ "item" : "gbotfence1" }},
+ {"op":"add","path":"/interactData/items/-","value":{ "item" : "gbotfence2" }},
+ {"op":"add","path":"/interactData/items/-","value":{ "item" : "gbotfence3" }},
+ {"op":"add","path":"/interactData/items/-","value":{ "item" : "gardenbotv80gspawner" }},
+ {"op":"add","path":"/interactData/items/-","value":{ "item" : "gardenbotv81gspawner" }},
+ {"op":"add","path":"/interactData/items/-","value":{ "item" : "gardenbotv82gspawner" }},
+ {"op":"add","path":"/interactData/items/-","value":{ "item" : "gardenbotv86gspawner" }}
+]

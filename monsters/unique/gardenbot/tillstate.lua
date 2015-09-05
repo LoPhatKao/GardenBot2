@@ -33,15 +33,17 @@ util.debugLine(mcontroller.position(),vec2.add(mcontroller.position(),toTarget),
       stateData.located = true
       stateData.timer = entity.randomizeParameterRange("gardenSettings.plantTime")
     elseif stateData.timer < 0 then
+      local modPos = vec2.add({0, -1}, stateData.targetPosition)
       if stateData.till == nil then
-          storage.tillMemory = world.mod(vec2.add({0, -1}, stateData.targetPosition), "foreground")
-      else
-        local modPos = vec2.add({0, -1}, stateData.targetPosition)
+        local modName = world.mod(modPos, "foreground")
+        if isPleasedGiraffe() and modName == "tilled" then modName = "tilleddry" end
+        storage.tillMemory = modName
+      else        
         if world.mod(modPos, "foreground") == nil -- nothing there
         or not world.damageTiles({modPos}, "foreground", position, "plantish", 1) then -- under tree?
           world.placeMod(modPos, "foreground", stateData.till)
-        if entity.hasSound("till") then entity.playSound("till") end
         end
+        if entity.hasSound("till") then entity.playSound("till") end
       end
       return true, 1
     end

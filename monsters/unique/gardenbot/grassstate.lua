@@ -41,8 +41,9 @@ util.debugLine(mcontroller.position(),vec2.add(mcontroller.position(),toTarget),
         if wmod == nil -- nothing there
         or not world.damageTiles({modPos}, "foreground", position, "plantish", 1) then -- under tree?
           world.placeMod(modPos, "foreground", stateData.grass)
-        if entity.hasSound("grass") then entity.playSound("grass") end
+          storage.grassMemory = nil
         end
+        if entity.hasSound("grass") then entity.playSound("grass") end
       end
       return true,1
     end
