@@ -40,10 +40,11 @@ util.debugLine(mcontroller.position(),vec2.add(mcontroller.position(),toTarget),
       end
       if seed ~= nil then
         --TODO fail check to add to ignored seeds
-        if world.placeObject(seed.name, stateData.targetPosition, 1, seed.parameters) then
+        local fd = mcontroller.facingDirection()
+        if world.placeObject(seed.name, stateData.targetPosition, fd, seed.parameters) then
           if oId == nil then self.inv.remove({name = seed.name, count = 1, parameters = seed.parameters}) end
           plantState.addToMemory(seed.name, stateData.targetPosition)
-        return true,entity.randomizeParameterRange("gardenSettings.plantTime")
+        return true--,entity.randomizeParameterRange("gardenSettings.plantTime")
         else
           local fp = stateData.targetPosition[1] .. "," .. stateData.targetPosition[2]
           if storage.failedMemory[fp] then
@@ -75,7 +76,7 @@ function plantState.findPosition(position)
   local dy = math.ceil(mcontroller.boundBox()[2]) -- 
 --  if string.find(self.searchType, 'lumber$') then dy = -2 end -- bleh :P
   
-  for offset = 1, entity.configParameter("gardenSettings.plantDistance", 10), 1 do
+  for offset = 0, entity.configParameter("gardenSettings.plantDistance", 10), 1 do
 --    for d = -1, 2, 2 do
       local targetPosition = vec2.add({ offset * d, dy }, basePosition)
       --local modName = world.mod(vec2.add({0, -1}, targetPosition), "foreground")

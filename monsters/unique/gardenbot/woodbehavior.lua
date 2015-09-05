@@ -119,7 +119,7 @@ local mcPos = mcontroller.position()
   checkStuck()
   self.lastMoveDirection = util.toDirection(moveDir)
   if self.stuckCount > entity.configParameter("stuckCountMax",15) and self.inState ~= "returnState" then
-    self.state.pickState()
+    self.state.pickState({ignoreDistance=true})
   end
 end
 
@@ -189,7 +189,7 @@ function attackState.enter()
 
 --  if util.trackTarget(findDist,findDist/2,nil) then --  also targets player boo :"(
   if attackState.findValidTarget(mcontroller.position(),findDist) then
-world.logInfo("attacking: %s",self.targetId)
+--world.logInfo("attacking: %s",self.targetId)
     return { timer = entity.configParameter("attackTargetHoldTime",5) } 
   end
   

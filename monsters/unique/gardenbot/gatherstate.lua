@@ -17,8 +17,8 @@ end
 --------------------------------------------------------------------------------
 function gatherState.update(dt, stateData)
   stateData.timer = stateData.timer - dt
-  if stateData.targetPosition == nil then
-    return true,entity.configParameter("gardenSettings.cooldown", 15)
+  if stateData.targetPosition == nil or not world.entityExists(stateData.targetId) then
+    return true--,entity.configParameter("gardenSettings.cooldown", 15)
   end
   
   local position = mcontroller.position()
@@ -88,6 +88,6 @@ function gatherState.canGather(name)
     local match = string.match(string.lower(name), v)
     if match ~= nil then return true end
   end
-  if 1-math.random() > 0.95 then self.harvest[string.lower(name)] = true end --lpk: learn to gather it
+  if 1-math.random() > 0.9 then self.harvest[string.lower(name)] = true end --lpk: learn to gather it
   return false
 end

@@ -72,6 +72,7 @@ end
 
 function harvestPools.doSpawnItem(pos,item)
 --world.logInfo("Spawning: %s",item)
+pos[2] = math.floor(pos[2])+0.5
 iName = harvestPools.itemName(item)
 iCnt = harvestPools.itemCount(item)
 iParam = harvestPools.itemParams(item)
@@ -92,6 +93,38 @@ local pools = {
 -- kao's test seed
 moneyHarvest = {fill={{item="moneyseed"}},pool={{weight=0.05,item={"moneyseed",1}},{weight=0.1,item={"voxel10k",1}},{weight=0.2,item={"voxel5k",1}},{weight=0.3,item={"voxel2k",1}},{weight=0.4,item={"voxel1k",1}},{item={"money",100}}},poolRounds={{0.7,1},{0.3,0}}},
 -- vanilla spawns -v Spirited Giraffe u5
+automatoHarvest={pool={{weight=0.6,item="automato"},{weight=0.2,item="automatoseed"},{weight=0.2,item="plantfibre"}},poolRounds={{0.7,2},{0.3,3}}},
+avesmingoHarvest={pool={{weight=0.6,item="avesmingo"},{weight=0.2,item="avesmingoseed"},{weight=0.2,item="plantfibre"}},poolRounds={{0.7,2},{0.3,3}}},
+bananaHarvest={pool={{weight=0.6,item="banana"},{weight=0.2,item="bananaseed"},{weight=0.2,item="plantfibre"}},poolRounds={{0.7,2},{0.3,3}}},
+beakseedHarvest={pool={{weight=0.6,item="beakseed"},{weight=0.2,item="beakseedseed"},{weight=0.2,item="plantfibre"}},poolRounds={{0.7,2},{0.3,3}}},
+boltbulbHarvest={fill={{item="boltbulbseed"}},pool={{weight=0.6,item="boltbulb"},{weight=0.2,item="boltbulbseed"},{weight=0.2,item="plantfibre"}},poolRounds={{0.7,2},{0.3,3}}},
+bonebooHarvest={pool={{weight=0.6,item="boneboo"},{weight=0.2,item="bonebooseed"},{weight=0.2,item="plantfibre"}},poolRounds={{0.7,2},{0.3,3}}},
+carrotHarvest={fill={{item="carrotseed"}},pool={{weight=0.6,item="carrot"},{weight=0.2,item="carrotseed"},{weight=0.2,item="plantfibre"}},poolRounds={{0.7,2},{0.3,3}}},
+chiliHarvest={pool={{weight=0.6,item="chili"},{weight=0.2,item="chiliseed"},{weight=0.2,item="plantfibre"}},poolRounds={{0.7,2},{0.3,3}}},
+coffeeHarvest={pool={{weight=0.6,item="coffeebeans"},{weight=0.2,item="coffeeseed"},{weight=0.2,item="plantfibre"}},poolRounds={{0.7,2},{0.3,3}}},
+coralcreepHarvest={pool={{weight=0.6,item="coralcreep"},{weight=0.2,item="coralcreepseed"},{weight=0.2,item="plantfibre"}},poolRounds={{0.7,2},{0.3,3}}},
+cornHarvest={pool={{weight=0.6,item="corn"},{weight=0.2,item="cornseed"},{weight=0.2,item="plantfibre"}},poolRounds={{0.7,2},{0.3,3}}},
+crystalplantHarvest={fill={{item="crystalplantseed"}},pool={{weight=0.6,item="crystalplant"},{weight=0.2,item="crystalplantseed"},{weight=0.2,item="plantfibre"}},poolRounds={{0.7,2},{0.3,3}}},
+currentcornHarvest={fill={{item="currentcornseed"}},pool={{weight=0.6,item="currentcorn"},{weight=0.2,item="currentcornseed"},{weight=0.2,item="plantfibre"}},poolRounds={{0.7,2},{0.3,3}}},
+diodiaHarvest={fill={{item="diodiaseed"}},pool={{weight=0.6,item="diodia"},{weight=0.2,item="diodiaseed"},{weight=0.2,item="plantfibre"}},poolRounds={{0.7,2},{0.3,3}}},
+dirturchinHarvest={fill={{item="dirturchinseed"}},pool={{weight=0.6,item="dirturchin"},{weight=0.2,item="dirturchinseed"},{weight=0.2,item="plantfibre"}},poolRounds={{0.7,2},{0.3,3}}},
+eggshootHarvest={fill={{item="eggshootseed"}},pool={{weight=0.6,item="eggshoot"},{weight=0.2,item="eggshootseed"},{weight=0.2,item="plantfibre"}},poolRounds={{0.7,2},{0.3,3}}},
+feathercrownHarvest={fill={{item="feathercrownseed"}},pool={{weight=0.6,item="feathercrown"},{weight=0.2,item="feathercrownseed"},{weight=0.2,item="plantfibre"}},poolRounds={{0.7,2},{0.3,3}}},
+grapesHarvest={pool={{weight=0.6,item="grapes"},{weight=0.2,item="grapesseed"},{weight=0.2,item="plantfibre"}},poolRounds={{0.7,2},{0.3,3}}},
+kiwiHarvest={fill={{item="kiwiseed"}},pool={{weight=0.6,item="kiwi"},{weight=0.2,item="kiwiseed"},{weight=0.2,item="plantfibre"}},poolRounds={{0.7,2},{0.3,3}}},
+neonmelonHarvest={fill={{item="neonmelonseed"}},pool={{weight=0.6,item="neonmelon"},{weight=0.2,item="neonmelonseed"},{weight=0.2,item="plantfibre"}},poolRounds={{0.7,2},{0.3,3}}},
+oculemonHarvest={fill={{item="oculemonseed"}},pool={{weight=0.6,item="oculemon"},{weight=0.2,item="oculemonseed"},{weight=0.2,item="plantfibre"}},poolRounds={{0.7,2},{0.3,3}}},
+pearlpeaHarvest={pool={{weight=0.6,item="pearlpea"},{weight=0.2,item="pearlpeaseed"},{weight=0.2,item="plantfibre"}},poolRounds={{0.7,2},{0.3,3}}},
+pineappleHarvest={fill={{item="pineappleseed"}},pool={{weight=0.6,item="pineapple"},{weight=0.2,item="pineappleseed"},{weight=0.2,item="plantfibre"}},poolRounds={{0.7,2},{0.3,3}}},
+potatoHarvest={fill={{item="potatoseed"}},pool={{weight=0.6,item="potato"},{weight=0.2,item="potatoseed"},{weight=0.2,item="plantfibre"}},poolRounds={{0.7,2},{0.3,3}}},
+pussplumHarvest={fill={{item="pussplumseed"}},pool={{weight=0.6,item="pussplum"},{weight=0.2,item="pussplumseed"},{weight=0.2,item="plantfibre"}},poolRounds={{0.7,2},{0.3,3}}},
+reefpodHarvest={fill={{item="reefpodseed"}},pool={{weight=0.6,item="reefpod"},{weight=0.2,item="reefpodseed"},{weight=0.2,item="plantfibre"}},poolRounds={{0.7,2},{0.3,3}}},
+riceHarvest={pool={{weight=0.6,item="rice"},{weight=0.2,item="riceseed"},{weight=0.2,item="plantfibre"}},poolRounds={{0.7,2},{0.3,3}}},
+sugarcaneHarvest={fill={{item="sugarcaneseed"}},pool={{weight=0.6,item="sugar"},{weight=0.2,item="sugarcaneseed"},{weight=0.2,item="plantfibre"}},poolRounds={{0.7,2},{0.3,3}}},
+tomatoHarvest={pool={{weight=0.6,item="tomato"},{weight=0.2,item="tomatoseed"},{weight=0.2,item="plantfibre"}},poolRounds={{0.7,2},{0.3,3}}},
+toxictopHarvest={fill={{item="toxictopseed"}},pool={{weight=0.6,item="toxictop"},{weight=0.2,item="toxictopseed"},{weight=0.2,item="plantfibre"}},poolRounds={{0.7,2},{0.3,3}}},
+wartweedHarvest={fill={{item="wartweedseed"}},pool={{weight=0.6,item="wartweed"},{weight=0.2,item="wartweedseed"},{weight=0.2,item="plantfibre"}},poolRounds={{0.7,2},{0.3,3}}},
+wheatHarvest={fill={{item="wheatseed"}},pool={{weight=0.6,item="wheat"},{weight=0.2,item="wheatseed"},{weight=0.2,item="plantfibre"}},poolRounds={{0.7,2},{0.3,3}}},
 mushroomHarvest={pool={{weight=1.0,item="shroom"}},poolRounds={{0.7,1},{0.3,2}}},
 flowerredHarvest={pool={{weight=1.0,item="petalred"}},poolRounds={{0.6,1},{0.3,2},{0.1,3}}},
 flowerblueHarvest={pool={{weight=1.0,item="petalblue"}},poolRounds={{0.6,1},{0.3,2},{0.1,3}}},
@@ -103,6 +136,9 @@ swordstoneHarvest={fill={{item="cobblestonematerial"}},pool={{weight=1.0,item="s
 kiriHarvest={fill={{item="avaliplant1"}},pool={{weight=1.0,item="avaliproduce1"},{weight=1.0,item="avaliplant1"},{weight=1.0,item="plantfibre"}},poolRounds={{0.7,1},{0.3,2}}},
 nakatiHarvest={fill={{item="avaliplant2"}},pool={{weight=1.0,item="avaliproduce2"},{weight=1.0,item="avaliproduce2"},{weight=1.0,item="avaliplant2"},{weight=1.0,item={"plantfibre",2}}},poolRounds={{0.7,1},{0.3,2}}},
 piruHarvest={fill={{item="avaliplant3"}},pool={{weight=1.0,item="avaliproduce3"},{weight=1.0,item="avaliplant3"},{weight=1.0,item="plantfibre"}},poolRounds={{0.7,1},{0.3,2}}},
+-- Bamboo + Reeds Mod -v 2.0 (2 entries)
+bamboocropBMBHarvest={fill={{item="bamboocropBMBseed"}},pool={{weight=0.7,item="bamboo"},{weight=0.2,item="bamboocropBMBseed"},{weight=0.2,item="plantfibre"}},poolRounds={{0.7,2},{0.3,3}}},
+reedcropBMBHarvest={fill={{item="reedcropBMBseed"}},pool={{weight=0.7,item="reed"},{weight=0.2,item="reedcropBMBseed"},{weight=0.2,item="plantfibre"}},poolRounds={{0.7,2},{0.3,3}}},
 -- More Food Mod -v 2.1.1 (27 entries)
 artichokeMFMHarvest={fill={{item="artichokeMFMseed"}},pool={{weight=0.6,item="artichokeMFM"},{weight=0.2,item="artichokeMFMseed"},{weight=0.2,item="plantfibre"}},poolRounds={{0.7,2},{0.3,3}}},
 oatsMFMHarvest={fill={{item="oatsMFMseed"}},pool={{weight=0.6,item="wholeoatsMFM"},{weight=0.2,item="oatsMFMseed"},{weight=0.2,item="plantfibre"}},poolRounds={{0.7,2},{0.3,3}}},

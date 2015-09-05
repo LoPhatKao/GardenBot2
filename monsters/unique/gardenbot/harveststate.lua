@@ -173,10 +173,13 @@ function harvestState.harvestFarmable(oId) -- rewritten by LoPhatKao june2015
   if stage ~= nil and interactions ~= nil and interactions[stage+1].harvestPool ~= nil then
 
     local hpname = interactions[stage+1].harvestPool
+    local stageReset = interactions[stage+1].resetToStage == nil
     -- try pleased giraffe method
     if world.spawnTreasure and world.spawnTreasure(pos,hpname) then world.breakObject(oId, true) return end
     -- try lpk's workaround
-    if harvestPools.spawnTreasure and harvestPools.getPool(hpname) then world.breakObject(oId, harvestPools.spawnTreasure(pos,hpname) ) return end
+    if harvestPools.spawnTreasure and harvestPools.getPool(hpname) then 
+    hpst=harvestPools.spawnTreasure(pos,hpname) 
+    world.breakObject(oId, hpst and stageReset) return end
 
     -- recreate vanilla harvestpools - cant find way to access them (in spirited)
     -- only works cause vanilla is pretty standardized
@@ -192,18 +195,18 @@ function harvestState.harvestFarmable(oId) -- rewritten by LoPhatKao june2015
         if pname == "sugarcane" then oname = "sugar" end
         
         if string.len(world.itemType(oname)) > 0 then -- itemtype returns "" for invalid, len sees "" as 0 
-          world.spawnItem(oname,{pos[1], pos[2] + i},1)
+          world.spawnItem(oname,{pos[1], pos[2] + 0.5},1)
           if self.harvest[string.lower(oname)] == nil then self.harvest[string.lower(oname)] = true end
         end
       end
       if percentile() < 0.2 then -- seed
         if string.len(world.itemType(pname.."seed")) > 0 then
-          world.spawnItem(pname.."seed",{pos[1], pos[2] + i},1)
+          world.spawnItem(pname.."seed",{pos[1], pos[2] + 0.5},1)
           forceSeed = false
         end
       end
       if percentile() < 0.2 then -- plantfibre
-        world.spawnItem("plantfibre",{pos[1], pos[2] + i},1)
+        world.spawnItem("plantfibre",{pos[1], pos[2] + 0.5},1)
       end
     
     end

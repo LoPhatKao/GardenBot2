@@ -48,7 +48,7 @@ util.debugLine(mcontroller.position(),vec2.add(mcontroller.position(),toTarget),
       self.inv.putInContainer(stateData.targetId)
       world.containerClose(stateData.targetId)
 --      chatNearbyPlayerOrBot()
-      return true    
+      return true,cooldown(120) -- 60-120sec   
     end
   else
     move({toTarget[1], toTarget[2]+1})

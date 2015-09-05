@@ -68,7 +68,7 @@ function move(direction)
   checkStuck()
   self.lastMoveDirection = util.toDirection(direction)
   if self.stuckCount > entity.configParameter("stuckCountMax",15) and self.inState ~= "returnState" then
-    self.state.pickState()
+    self.state.pickState({ignoreDistance=true})
   end
 end
 --------------------------------------------------------------------------------
