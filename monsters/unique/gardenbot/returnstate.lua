@@ -43,13 +43,13 @@ util.debugLine(mcontroller.position(),vec2.add(mcontroller.position(),toTarget),
   if distance < 3 * entity.configParameter("gardenSettings.interactRange") then
     stateData.timer = -1
     self.ignoreIds = {}
-    entity.setAnimationState("movement", "idle")
+    setAnimationState("movement", "idle")
   else
     if stateData.timer < 0 and (self.stuckCount > 0 or not canReachTarget(stateData.targetPosition)) then
       local p = stateData.targetPosition
       mcontroller.setPosition({p[1], p[2] + 0.5 + math.abs(mcontroller.boundBox()[2])})
       mcontroller.setVelocity({0,-1 * world.gravity(mcontroller.position())})
-      entity.setAnimationState("movement", "idle")
+      setAnimationState("movement", "idle")
     else
       move({toTarget[1], toTarget[2]})
     end

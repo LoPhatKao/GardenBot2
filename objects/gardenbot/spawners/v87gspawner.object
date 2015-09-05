@@ -1,0 +1,40 @@
+{
+  "objectName" : "gardenbotv87gspawner",
+  "rarity" : "Common",
+  "description" : "Guardin' the garden.\nWhen scarecrows aren't scary enough.",
+  "shortdescription" : "Guardin'Bot v87g",
+  "race" : "generic",
+  "category" : "decorative",
+  "price" : 750,
+  "printable" : false,
+
+  "apexDescription" : "A deactivated garden bot.",
+  "avianDescription" : "A deactivated garden bot.",
+  "floranDescription" : "A deactivated garden bot.",
+  "glitchDescription" : "A deactivated garden bot.",
+  "humanDescription" : "A deactivated garden bot.",
+  "hylotlDescription" : "A deactivated garden bot.",
+
+  "inventoryIcon" : "v87gspawnericon.png",
+  "orientations" : [
+    {
+      "dualImage" : "v87gspawner.png:<color>",
+
+      "imagePosition" : [-8, -8],
+      "frames" : 1,
+      "animationCycle" : 1.0,
+
+      "spaces" : [ [0, 0], [-1, 0], [0, -1], [-1, -1], [0, 1], [-1, 1] ],
+      "anchors" : [ "bottom" ]
+    }
+  ],
+  
+  "botspawner" : {
+      "type" : "gardenbotv87g"
+  },
+  
+  "scripts" : [ 
+    "/objects/gardenbot/botspawner.lua"
+  ],
+  "scriptDelta" : 5
+}

@@ -29,7 +29,7 @@ util.debugLine(mcontroller.position(),vec2.add(mcontroller.position(),toTarget),
   if distance - 1 <= entity.configParameter("gardenSettings.interactRange") then
 --    entity.setFacingDirection(util.toDirection(toTarget[1]))
     mcontroller.controlFace(util.toDirection(toTarget[1]))
-    entity.setAnimationState("movement", "work")
+    setAnimationState("movement", "work")
     if not stateData.located then
       stateData.located = true
       stateData.timer = entity.randomizeParameterRange("gardenSettings.depositTime")
@@ -63,6 +63,7 @@ end
 function gatherState.findTargetPosition(position)
   local objectIds = {}
   if string.find(self.searchType, '^linear') then
+    position[2] = position[2]+math.ceil(mcontroller.boundBox()[2]) -- lpk: adjust base position
     local p1 = vec2.add({-self.searchDistance, 0}, position)
     local p2 = vec2.add({self.searchDistance, 0}, position)
     objectIds = world.itemDropQuery(p1, p2,{order = "nearest"})

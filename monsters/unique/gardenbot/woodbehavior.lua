@@ -19,7 +19,7 @@ function simplelumberbot.init(args)
     "idleState"
   })
   self.state.leavingState = function(stateName)
-    entity.setAnimationState("movement", "idle")
+    setAnimationState("movement", "idle")
   end
   
   self.state.stateCooldown("plantState",cooldown()/2)-- lpk: add some delay before cpu intensive states can trigger
@@ -104,11 +104,11 @@ local mcPos = mcontroller.position()
   end
   
   if not mcontroller.onGround() then
-    entity.setAnimationState("movement", "jump")
+    setAnimationState("movement", "jump")
   elseif run then
-    entity.setAnimationState("movement", "run")
+    setAnimationState("movement", "run")
   else
-    entity.setAnimationState("movement", "walk")
+    setAnimationState("movement", "walk")
   end
 
 --  util.debugLine(mcontroller.position(), vec2.add(mcontroller.position(), vec2.mul({moveDir,moveY}, 3)), "green")
@@ -209,7 +209,7 @@ function targInLOS(targID)
 end
 
 function isPsychoTarget(mId)
-if math.random() < 0.1 and world.callScriptedEntity(mId,"isGardenbot") ~= true then 
+if math.random() < 0.1 and world.monsterType(mId) ~= "fireflyspawner" and world.callScriptedEntity(mId,"isGardenbot") ~= true then 
   return true
 end 
   return false
@@ -279,11 +279,11 @@ end
 --------------------------------------------------------------------------------
 function attackState.setAttackEnabled(enabled)
   if enabled then
-    entity.setAnimationState("attack", "melee")
+    setAnimationState("attack", "melee")
     self.attackHoldTimer = entity.configParameter("attackHoldTime",2)
 --    if maybeKickPetball() then return end
   else
-    entity.setAnimationState("movement", "idle")
+    setAnimationState("movement", "idle")
   end
   entity.setDamageOnTouch(enabled)
 end
@@ -292,10 +292,10 @@ function attackState.setAggressive(targetId)
   self.targetId = targetId
 
   if targetId ~= nil then
-    entity.setAnimationState("attack", "melee")
+    setAnimationState("attack", "melee")
     entity.setAggressive(true)
   else
-    entity.setAnimationState("movement", "idle")
+    setAnimationState("movement", "idle")
     entity.setAggressive(false)
   end
 end

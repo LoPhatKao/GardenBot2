@@ -7,7 +7,7 @@ function idleState.enter()
 end
 --------------------------------------------------------------------------------
 function idleState.update(dt, stateData)
-  entity.setAnimationState("movement", "idle")
+  setAnimationState("movement", "idle")
   --world.logInfo("Idling")
   if not self.state.pickState() then
     --world.logInfo("No state found")

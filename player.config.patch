@@ -7,5 +7,6 @@
  {"op":"add","path":"/defaultBlueprints/tier1/-","value":{ "item" : "gardenbotv80gspawner" }},
  {"op":"add","path":"/defaultBlueprints/tier1/-","value":{ "item" : "gardenbotv81gspawner" }},
  {"op":"add","path":"/defaultBlueprints/tier1/-","value":{ "item" : "gardenbotv82gspawner" }},
- {"op":"add","path":"/defaultBlueprints/tier1/-","value":{ "item" : "gardenbotv86gspawner" }}
+ {"op":"add","path":"/defaultBlueprints/tier1/-","value":{ "item" : "gardenbotv86gspawner" }},
+ {"op":"add","path":"/defaultBlueprints/tier1/-","value":{ "item" : "gardenbotv87gspawner" }}
 ]

@@ -25,7 +25,7 @@ function simplegardenbot.init(args)
     "returnState"
   })
   self.state.leavingState = function(stateName)
-    entity.setAnimationState("movement", "idle")
+    setAnimationState("movement", "idle")
   end
   
   self.state.stateCooldown("plantState",cooldown()/2)-- lpk: add some delay before cpu intensive states can trigger
@@ -63,7 +63,7 @@ function move(direction)
  -- if willFall(direction) then direction = -direction end  -- try not to fall
   direction = touchingFenceDirection(mcPos,direction)-- fence last
  
-  entity.setAnimationState("movement", "move")
+  setAnimationState("movement", "move")
   local run = self.inState ~= "moveState"--util.toDirection(direction) == mcontroller.facingDirection() and not self.inState == "moveState"
   mcontroller.controlMove(direction, run)
   mcontroller.controlFace(direction)
@@ -144,7 +144,7 @@ function targInLOS(targID)
 end
 
 function isPsychoTarget(mId)
-if math.random() < 0.1 and world.callScriptedEntity(mId,"isGardenbot") ~= true then 
+if math.random() < 0.1 and world.monsterType(mId) ~= "fireflyspawner" and world.callScriptedEntity(mId,"isGardenbot") ~= true then 
   return true
 end 
   return false
@@ -220,10 +220,10 @@ end
 --------------------------------------------------------------------------------
 function attackState.setAttackEnabled(enabled)
   if enabled then
-    entity.setAnimationState("movement", "attack")
+    setAnimationState("movement", "attack")
     self.attackHoldTimer = entity.configParameter("attackHoldTime")
   else
-    entity.setAnimationState("movement", "aggro")
+    setAnimationState("movement", "aggro")
   end
 
   entity.setDamageOnTouch(enabled)
@@ -233,10 +233,10 @@ function attackState.setAggressive(targetId)
   self.targetId = targetId
 
   if targetId ~= nil then
-    entity.setAnimationState("movement", "aggro")
+    setAnimationState("movement", "aggro")
     entity.setAggressive(true)
   else
-    entity.setAnimationState("movement", "idle")
+    setAnimationState("movement", "idle")
     entity.setAggressive(false)
   end
 end

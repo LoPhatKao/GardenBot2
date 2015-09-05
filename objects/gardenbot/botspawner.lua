@@ -1,7 +1,6 @@
 function init(virtual)
   if not virtual then
     entity.setInteractive(true)
---    world.logInfo("\n-world-\n %s\n-entity-\n %s\n-mcontroller-\n %s",world,entity,mcontroller)
   end
 end
 
@@ -16,9 +15,15 @@ function onInteraction(args)
     parameters.persistent = true
 	parameters.damageTeam = 1
     parameters.ownerUuid = args.sourceId
-    parameters.level = 1
+    parameters.level = getLevel()
     parameters.spawnPoint = {p[1], p[2] + 1}
     world.spawnMonster(type, {p[1], p[2] + 1}, parameters)
     entity.smash()
   end
+end
+
+function getLevel()
+  if world.getProperty("ship.fuel") ~= nil then return 10 end
+  if world.threatLevel then return world.threatLevel() end  -- pleased giraffe
+  return 1
 end

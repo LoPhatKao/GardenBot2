@@ -30,7 +30,7 @@ util.debugLine(mcontroller.position(),vec2.add(mcontroller.position(),toTarget),
   if distance < entity.configParameter("gardenSettings.interactRange") then
 --    entity.setFacingDirection(util.toDirection(toTarget[1]))
     mcontroller.controlFace(util.toDirection(toTarget[1]))
-    entity.setAnimationState("movement", "work")
+    setAnimationState("movement", "work")
     if not stateData.located then
       stateData.located = true
       stateData.timer = entity.randomizeParameterRange("gardenSettings.plantTime")

@@ -1,0 +1,9 @@
+{
+  "name" : "arm",
+  "category" : "gardenbotv87g",
+  "type" : "arm",
+
+  "frames" : {
+    "arm" : "v87g.png"
+  }
+}

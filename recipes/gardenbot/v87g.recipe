@@ -1,0 +1,12 @@
+{
+  "input" : [
+    { "item" : "steelbar", "count" : 8 },
+    { "item" : "laserdiode", "count" : 4 },
+    { "item" : "circuitboard", "count" : 4 }
+  ],
+  "output" : {
+    "item" : "gardenbotv87gspawner",
+    "count" : 1
+  },
+  "groups" : [ "mod", "ironcraftingtable", "objects", "all" ]
+}

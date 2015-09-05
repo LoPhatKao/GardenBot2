@@ -44,7 +44,7 @@ function harvestState.farmUpdate(dt, stateData)
   local distance = world.magnitude(toTarget)
   util.debugLine(mcontroller.position(),vec2.add(mcontroller.position(),toTarget),"red")
   if distance < entity.configParameter("gardenSettings.interactRange") then
-    entity.setAnimationState("movement", "work")
+    setAnimationState("movement", "work")
     mcontroller.controlFace(util.toDirection(toTarget[1]))
     if not stateData.located then
       stateData.located = true
@@ -101,7 +101,7 @@ util.debugLine(mcontroller.position(),vec2.add(mcontroller.position(),toTarget),
     if stateData.timer <= 0 then
  --     entity.setFacingDirection(util.toDirection(toTarget[1]))
       mcontroller.controlFace(util.toDirection(toTarget[1]+1)) --lpk: +1 to face center of tree
-      entity.setAnimationState("attack", "melee")
+      setAnimationState("attack", "melee")
       stateData.timer = entity.randomizeParameterRange("gardenSettings.harvestTime")
       local tileDmg = stateData.count/2 --lpk: sliding damage - 0,1,2,3 .. etc
       stateData.count = stateData.count + 1
@@ -171,11 +171,12 @@ function harvestState.harvestFarmable(oId) -- rewritten by LoPhatKao june2015
   if world.farmableStage then stage = world.farmableStage(oId) end
   local interactions = world.callScriptedEntity(oId, "entity.configParameter", "stages",nil)
   if stage ~= nil and interactions ~= nil and interactions[stage+1].harvestPool ~= nil then
+if math.random() <0.8 and world.damageTiles({pos},"foreground",pos,"plantish",1,1) then return end
 
     local hpname = interactions[stage+1].harvestPool
     local stageReset = interactions[stage+1].resetToStage == nil
     -- try pleased giraffe method
-    if isPleasedGiraffe() then world.spawnTreasure(pos,hpname,10) world.breakObject(oId, stageReset) return end
+    if isPleasedGiraffe() then world.spawnTreasure(pos,hpname,entity.level()) world.breakObject(oId, stageReset) return end
     -- try lpk's workaround
     if harvestPools.spawnTreasure and harvestPools.getPool(hpname) then 
     hpst=harvestPools.spawnTreasure(pos,hpname) 

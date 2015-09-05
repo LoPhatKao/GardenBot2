@@ -1,0 +1,189 @@
+{
+  "type" : "gardenbotv87g",
+
+  "categories" : [ "gardenbotv87g" ],
+  "parts" : [ "body", "arm" ],
+
+  "animation" : "v87g.animation",
+  "reversed" : true,
+  "colors" : "/monsters/colors.config",
+  "dropPools" : [ ],
+  "persistent" : true,
+
+  "baseParameters" : {
+    "scripts" : [
+      "/scripts/delegate.lua",
+      "/monsters/unique/gardenbot/gardenbot.lua",
+      "/monsters/unique/gardenbot/guardbehavior.lua",
+      "/scripts/sensors.lua",
+      "/scripts/stateMachine.lua",
+      "/scripts/util.lua",
+      "/scripts/vec2.lua",
+      "/scripts/inventoryManager.lua",
+      
+      "/monsters/unique/gardenbot/gatherState.lua",
+      "/monsters/unique/gardenbot/depositState.lua",
+      "/monsters/unique/gardenbot/returnState.lua",
+      "/monsters/unique/gardenbot/idleState.lua",
+
+      "/monsters/ground/skills/createGroundRangedAttack.lua"
+    ],
+
+    "scriptDelta" : 10,
+    "gardenSettings" : {
+      "interactRange" : 3.0,
+      "searchDistance" : 25.0,
+      "plantDistance" : 8.0,
+      "cooldown" : 15.0,
+      "locateTime" : [2.0, 3.0],
+      "harvestTime" : [1.0, 1.8],
+      "plantTime" : [1.0, 1.8],
+      "depositTime" : [0.5, 1.0],
+      "searchType" : "radialfarm",
+      "fovHeight" : 3,
+      "seed" : [ "seed" ],
+      "gatherables" : [ 
+        {"seed" : "match", "consumable" : "type", "plant" : "match"}, "money"
+      ]
+    },
+
+    "damageTeam" : 1,
+
+    "baseSkills" : [ "plasmaBurstAttack"],
+    "specialSkills" : [ "bubbleShieldSpecial" ],
+    
+    "projectileParameters" : {
+      "skillName" : "plasmaBurstAttack",
+      "projectile" : "stickyplasma",
+      "range" : 20,
+      "speed" : 60,
+      "power" : 8,
+      "shots" : 3,
+      "fireInterval" : 0.3,
+      "castTime" : 0.4,
+      "castEffect" : "castice"
+    },
+
+    "projectileSourceOffset" : [1.125, 0],
+    "projectileSourcePosition" : [-1.125, -0.5],
+
+    "aggressive" : true,
+    "territoryDistance" : 10.0,
+    "territorialTargetRadius" : 20.0,
+    "minimalTargetRadius" : 6.0,
+    "targetSearchTime" : 0.5,
+    "targetHoldTime" : 5.0,
+    
+    "closeDistance" : 1.5,
+
+    "wanderTime" : [4.0, 6.0],
+    "wanderMovementTime" : [2.0, 3.0],
+
+    "jumpTargetDistance" : 100,
+    "jumpTime" : [0, 0],
+
+    "pathing" : {
+      "canOpenDoors" : false
+    },
+
+    "metaBoundBox" : [-1.75, -1.75, 1.75, 1.0],
+    "scale" : 1.0,
+
+    "movementSettings" : {
+      "collisionPoly" : [ [-1.75, -1.75], [1.75, -1.75], [1.75, 1.0], [-1.75, 1.0] ],
+
+      "mass" : 0.2,
+      "walkSpeed" : 4,
+      "runSpeed" : 6,
+      "jumpSpeed" : 0,
+      "flySpeed" : 15,
+      "airFriction" : 0.25,
+      "airForce" : 50.0,
+      "airJumpProfile" : {
+        "jumpControlForce" : 0,
+        "jumpInitialPercentage" : 0
+      }
+    },
+
+    "knockoutTime" : 0.1,
+    "knockoutEffect" : "blink",
+    "deathParticles" : "deathPoof",
+
+    "touchDamage" : {
+      "poly" : [ [-1.75, -1.75], [1.75, -1.75], [1.75, 1.0], [-1.75, 1.0] ],
+      "damage" : 15,
+
+      "teamType" : "enemy",
+      "damageSourceKind" : "electroshock",
+      "statusEffects" : [ ]
+    },
+
+    "statusSettings" : {
+      "statusProperties" : {
+        "targetMaterialKind" : "robotic"
+      },
+
+      "appliesEnvironmentStatusEffects" : false,
+      "minimumLiquidStatusEffectPercentage" : 0.1,
+
+      "primaryScriptSources" : [
+        "/stats/monster_primary.lua"
+      ],
+      "primaryScriptDelta" : 0,
+
+      "stats" : {
+        "maxHealth" : {
+          "baseValue" : 72
+        },
+        "maxShield" : {
+          "baseValue" : 16.0
+        },
+        "protection" : {
+          "baseValue" : 1.0
+        },
+        "healthRegen" : {
+          "baseValue" : 0.0
+        },
+        "poisonImmunity" : {
+          "baseValue" : 1.0
+        },
+        "shieldRegen" : {
+          "baseValue" : 0.0
+        }
+      },
+
+      "resources" : {
+        "health" : {
+          "maxStat" : "maxHealth",
+          "deltaStat" : "healthRegen",
+          "defaultPercentage" : 100
+        },
+        "shieldHealth" : {
+          "maxStat" : "maxShield",
+          "deltaStat" : "shieldRegen",
+          "defaultPercentage" : 100
+        }
+      }
+    },
+
+    "mouthOffset" : [0, 0],
+    "feetOffset" : [0, -8],
+
+    "collisionSensors" : [ [2.0, 0.0] ],
+
+    "nearGroundSensor" : [ [0.0, -1.0] ],
+    "midGroundSensor" : [ [0.0, -4.0] ],
+
+    "moveTimeRange" : [2.5, 5.0],
+    "moveCooldownTime" : 1.0,
+
+    "targetAcquisitionDistance" : 35.0,
+
+    "attackTargetHoldTime" : 5.0,
+    "attackDistance" : 20.0,
+
+    "shieldHealthRatio" : 0.25,
+
+    "aimCorrectionOffset" : [0, -1]
+  }
+}

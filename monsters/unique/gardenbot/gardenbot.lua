@@ -15,7 +15,7 @@ end
 --------------------------------------------------------------------------------
 function gardenbot.init(args)
   entity.setDeathParticleBurst("deathPoof")
-  entity.setAnimationState("movement", "idle")
+  setAnimationState("movement", "idle")
   entity.setAggressive(false)
   
   self.inv = inventoryManager.create()
@@ -42,7 +42,8 @@ function gardenbot.init(args)
   self.searchType = entity.configParameter("gardenSettings.searchType")
   self.searchDistance = entity.configParameter("gardenSettings.searchDistance")
   
-  self.lastMoveDirection = 1
+  self.lastMoveDirection = util.randomDirection()
+  self.shielded = false
   
   script.setUpdateDelta(10)
   self.isCodeProfiling = type(profilerApi.init) == "function" and false
@@ -66,6 +67,10 @@ function gardenbot.damage(args)
   else
   self.state.pickState(args.sourceId) -- not dead, attack back
   end
+end
+--------------------------------------------------------------------------------
+function shouldDie()
+  return self.dead
 end
 --------------------------------------------------------------------------------
 function cooldown(base)
@@ -294,6 +299,24 @@ function willFall(direction)
   if world.rectTileCollision(groundRegion, "Any") then return false end
   end
   return true
+end
+--------------------------------------------------------------------------------
+-- lpk: generic~ish animation setter - some v87g specifics so shield animates correctly
+function setAnimationState(base, state)
+local anim = entity.animationState(base)
+  if anim == state or (anim == "shieldStart" and state ~= "shieldEnd") or (anim == "shieldEnd" and state ~= "shieldStart") then return end
+  if self.shielded and state == "shieldStart" then return end
+  if self.shielded and state ~= "shieldEnd" then return end
+  entity.setAnimationState(base,state)
+end
+--------------------------------------------------------------------------------
+-- nearby monster was hurt, lets help kill it :D
+function monsterDamaged(entityId, entitySeed, damageSourceId)
+  if self.targetId == nil and damageSourceId > 0 and damageSourceId ~= entity.id()
+  and world.callScriptedEntity(damageSourceId,"isGardenbot") == true then
+-- no targ, damID not player, damID not self, damID is gbot
+    self.state.pickState(entityId)
+  end
 end
 --------------------------------------------------------------------------------
 -- lpk: copy entityproxy, as its small
