@@ -8,17 +8,90 @@ function harvestPools.spawnTreasure (pos, poolname, level, seed) -- i'm ignoring
   if type(pos) ~= "table" then return false end -- no spawn pos
   if type(poolname) ~= "string" then return false end -- invalid name parameter
 
+  local tp = harvestPools.getPool(poolname)
+  if tp == nil then  -- not listed
+--    world.logInfo("Pool not found: %s",poolname)
+    return false
+  else -- is listed in known pools, generate dat bling
+    local didSpawn = false
+    if tp.fill ~= nil then -- spawn 'always drop' items
+      for i = 1,#tp.fill do
+        harvestPools.doSpawnItem(pos,tp.fill[i].item)
+        didSpawn = true
+      end
+    end
+    if tp.pool ~= nil then -- spawn 'maybe drop' items
+      local maxrnd = harvestPools.numRounds(tp.poolRounds)
+      for i = 1, maxrnd do
+        local ritem = tp.pool[math.random(1,#tp.pool)]
+        if math.random() <= harvestPools.poolWeight(ritem) then
+          harvestPools.doSpawnItem(pos,ritem.item)
+          didSpawn = true
+        end
+      end
+    end
+    return didSpawn
+  end
+  return false
+end
 
 ---------------------------------------------------------------------------------------
+--------------  helper funcs
+---------------------------------------------------------------------------------------
+
+function harvestPools.numRounds(poolRounds)--randomize # rounds of pool spawning, returning 0 is ok
+  if type(poolRounds) == "table" then -- usually a table of tables
+    for i = #poolRounds,1,-1 do
+      if math.random() <= poolRounds[i][1] or i == 1 then return poolRounds[i][2] end
+    end
+  end
+  return 0
+end
+
+function harvestPools.poolWeight(pool)
+if pool.weight ~= nil then return pool.weight end
+return 1
+end 
+
+function harvestPools.itemName(item)
+  if type(item) == "string" then return item end
+  if type(item) == "table" then return item[1] end
+  return "perfectlygenericitem" -- shouldnt ever get here.. 
+end
+
+function harvestPools.itemCount(item)
+if type(item) == "table" and item[2] ~= nil then return item[2] end
+return 1
+end
+
+function harvestPools.itemParams(item) -- for stuff with params, generated weps etc.
+if type(item) == "table" and item[3] ~= nil then return item[3] end
+return {}
+end
+
+
+function harvestPools.doSpawnItem(pos,item)
+--world.logInfo("Spawning: %s",item)
+iName = harvestPools.itemName(item)
+iCnt = harvestPools.itemCount(item)
+iParam = harvestPools.itemParams(item)
+  if not world.spawnItem(iName,pos,iCnt,iParam) then 
+    world.logInfo("Failed to spawn item: %s",item)
+  end
+end
+
+function harvestPools.getPool(poolname)
+---------------------------------------------------------------------------------------
 --  pool data - here comes the hugeness -.- lol - somewhere near 250kb
---  poolcounts: vanilla = 39(7 used), MFM = 27, FU = 174, OPP = 737 (-1 for 2kbpotage)
+--  poolcounts: vanilla = 39(7 used), MFM = 27, FU = 174, OPP = 737 
 -- should add popular race crops - avali etc
 -- gb2rc2.1 - move to local of spawnTreasure
+-- gb2rc3.1 move to its own func in general cleanup of harvestpool lua
 ---------------------------------------------------------------------------------------
 local pools = {
 -- kao's test seed
 moneyHarvest = {fill={{item="moneyseed"}},pool={{weight=0.05,item={"moneyseed",1}},{weight=0.1,item={"voxel10k",1}},{weight=0.2,item={"voxel5k",1}},{weight=0.3,item={"voxel2k",1}},{weight=0.4,item={"voxel1k",1}},{item={"money",100}}},poolRounds={{0.7,1},{0.3,0}}},
--- non-food vanilla spawns -v Spirited Giraffe u5
+-- vanilla spawns -v Spirited Giraffe u5
 mushroomHarvest={pool={{weight=1.0,item="shroom"}},poolRounds={{0.7,1},{0.3,2}}},
 flowerredHarvest={pool={{weight=1.0,item="petalred"}},poolRounds={{0.6,1},{0.3,2},{0.1,3}}},
 flowerblueHarvest={pool={{weight=1.0,item="petalblue"}},poolRounds={{0.6,1},{0.3,2},{0.1,3}}},
@@ -235,7 +308,7 @@ whitespine={fill={{item="whitespine"},{item="whitespineshell"},{item="plantfibre
 garikleaf={fill={{item="garikleaf"},{item="garikleafblossom"},{item="plantfibre"}},pool={{weight=0.5,item="garikleaf"}},poolRounds={{0.5,0},{0.5,1}}},
 fuavikancactusHarvest={pool={{weight=0.6,item="fuslicedcactus"},{weight=0.2,item="fuavikancactusseed"},{weight=0.2,item="plantfibre"}},poolRounds={{0.7,2},{0.3,3}}},
 fuavikanspiceplantHarvest={pool={{weight=0.6,item="fuavikanspices"},{weight=0.2,item="fuavikanspiceplantseed"},{weight=0.2,item="plantfibre"}},poolRounds={{0.7,2},{0.3,3}}},
--- Ram's Oreplants+ -v 9.9 (737 entries .. jebus man o.O )
+-- Ram's Oreplants+ -v 10.0 (763 entries .. jebus man o.O )
 ultimateoreHarvest002={pool={{weight=0.1,item={"aegisaltore",64}},{weight=0.1,item={"coalore",64}},{weight=0.1,item={"copperore",64}},{weight=0.1,item={"corefragmentore",64}},{weight=0.1,item={"crystal",64}},{weight=0.1,item={"diamond",64}},{weight=0.1,item={"goldore",64}},{weight=0.1,item={"ironore",64}},{weight=0.1,item={"lead",64}},{weight=0.1,item={"moonstoneore",64}},{weight=0.1,item={"platinumore",64}},{weight=0.1,item={"plutoniumore",64}},{weight=0.1,item={"rubiumore",64}},{weight=0.1,item={"silverore",64}},{weight=0.1,item={"solariumore",64}},{weight=0.1,item={"sulphur",64}},{weight=0.1,item={"titaniumore",64}},{weight=0.1,item={"triangliumore",64}},{weight=0.1,item={"uraniumore",64}},{weight=0.1,item={"violiumore",64}}},poolRounds={{0.2,1},{0.2,2},{0.2,3},{0.2,4},{0.2,5}}},
 ultimateliquidHarvest002={pool={{weight=0.1,item={"liquidalienjuice",320}},{weight=0.1,item={"liquidhealing",320}},{weight=0.1,item={"liquidlava",320}},{weight=0.1,item={"liquidcoffee",320}},{weight=0.1,item={"liquidfuel",320}},{weight=0.1,item={"liquidmilk",320}},{weight=0.1,item={"liquidoil",320}},{weight=0.1,item={"liquidpoison",320}},{weight=0.1,item={"swampwater",320}},{weight=0.1,item={"liquidwater",320}}},poolRounds={{0.2,1},{0.2,2},{0.2,3},{0.2,4},{0.2,5}}},
 ultimatecompoundHarvest002={pool={{weight=0.1,item={"ceruliumcompound",8}},{weight=0.1,item={"copperbar",8}},{weight=0.1,item={"durasteelbar",8}},{weight=0.1,item={"feroziumcompound",8}},{weight=0.1,item={"goldbar",8}},{weight=0.1,item={"imperviumcompound",8}},{weight=0.1,item={"ironbar",8}},{weight=0.1,item={"platinumbar",8}},{weight=0.1,item={"plutoniumrod",8}},{weight=0.1,item={"refinedaegisalt",8}},{weight=0.1,item={"refinedrubium",8}},{weight=0.1,item={"refinedviolium",8}},{weight=0.1,item={"silverbar",8}},{weight=0.1,item={"solariumstar",8}},{weight=0.1,item={"steelbar",8}},{weight=0.1,item={"titaniumbar",8}},{weight=0.1,item={"uraniumrod",8}}},poolRounds={{0.2,1},{0.2,2},{0.2,3},{0.2,4},{0.2,5}}},
@@ -657,6 +730,32 @@ bottledmilkHarvest002={pool={{weight=0.5,item={"milk",1}},{weight=0.3,item={"mil
 offalHarvest002={pool={{weight=0.5,item={"offal",1}},{weight=0.3,item={"offal",2}},{weight=0.2,item={"offal",4}}},poolRounds={{1,1}}},
 perfectlygenericitemHarvest002={pool={{weight=0.5,item={"perfectlygenericitem",1}},{weight=0.3,item={"perfectlygenericitem",2}},{weight=0.2,item={"perfectlygenericitem",4}}},poolRounds={{1,1}}},
 poopHarvest002={pool={{weight=0.5,item={"poop",1}},{weight=0.3,item={"poop",2}},{weight=0.2,item={"poop",4}}},poolRounds={{1,1}}},
+apexmocksignHarvest002={pool={{weight=0.5,item={"apexmocksign",1}},{weight=0.3,item={"apexmocksign",2}},{weight=0.2,item={"apexmocksign",4}}},poolRounds={{1,1}}},
+apexmedsignHarvest002={pool={{weight=0.5,item={"apexmedsign",1}},{weight=0.3,item={"apexmedsign",2}},{weight=0.2,item={"apexmedsign",4}}},poolRounds={{1,1}}},
+apexlockerHarvest002={pool={{weight=0.5,item={"apexlocker",1}},{weight=0.3,item={"apexlocker",2}},{weight=0.2,item={"apexlocker",4}}},poolRounds={{1,1}}},
+apexlevel1signHarvest002={pool={{weight=0.5,item={"apexlevel1sign",1}},{weight=0.3,item={"apexlevel1sign",2}},{weight=0.2,item={"apexlevel1sign",4}}},poolRounds={{1,1}}},
+apexlamp3Harvest002={pool={{weight=0.5,item={"apexlamp3",1}},{weight=0.3,item={"apexlamp3",2}},{weight=0.2,item={"apexlamp3",4}}},poolRounds={{1,1}}},
+apexlamp2Harvest002={pool={{weight=0.5,item={"apexlamp2",1}},{weight=0.3,item={"apexlamp2",2}},{weight=0.2,item={"apexlamp2",4}}},poolRounds={{1,1}}},
+apexlamp1Harvest002={pool={{weight=0.5,item={"apexlamp1",1}},{weight=0.3,item={"apexlamp1",2}},{weight=0.2,item={"apexlamp1",4}}},poolRounds={{1,1}}},
+apexhdtvHarvest002={pool={{weight=0.5,item={"apexhdtv",1}},{weight=0.3,item={"apexhdtv",2}},{weight=0.2,item={"apexhdtv",4}}},poolRounds={{1,1}}},
+apexfridgeHarvest002={pool={{weight=0.5,item={"apexfridge",1}},{weight=0.3,item={"apexfridge",2}},{weight=0.2,item={"apexfridge",4}}},poolRounds={{1,1}}},
+apexflusignHarvest002={pool={{weight=0.5,item={"apexflusign",1}},{weight=0.3,item={"apexflusign",2}},{weight=0.2,item={"apexflusign",4}}},poolRounds={{1,1}}},
+apexdonotenterHarvest002={pool={{weight=0.5,item={"apexdonotenter",1}},{weight=0.3,item={"apexdonotenter",2}},{weight=0.2,item={"apexdonotenter",4}}},poolRounds={{1,1}}},
+apexdeskHarvest002={pool={{weight=0.5,item={"apexdesk",1}},{weight=0.3,item={"apexdesk",2}},{weight=0.2,item={"apexdesk",4}}},poolRounds={{1,1}}},
+apexcurtainHarvest002={pool={{weight=0.5,item={"apexcurtain",1}},{weight=0.3,item={"apexcurtain",2}},{weight=0.2,item={"apexcurtain",4}}},poolRounds={{1,1}}},
+apexcounter2Harvest002={pool={{weight=0.5,item={"apexcounter2",1}},{weight=0.3,item={"apexcounter2",2}},{weight=0.2,item={"apexcounter2",4}}},poolRounds={{1,1}}},
+apexcounter1Harvest002={pool={{weight=0.5,item={"apexcounter1",1}},{weight=0.3,item={"apexcounter1",2}},{weight=0.2,item={"apexcounter1",4}}},poolRounds={{1,1}}},
+apexcouchHarvest002={pool={{weight=0.5,item={"apexcouch",1}},{weight=0.3,item={"apexcouch",2}},{weight=0.2,item={"apexcouch",4}}},poolRounds={{1,1}}},
+apexcooltableHarvest002={pool={{weight=0.5,item={"apexcooltable",1}},{weight=0.3,item={"apexcooltable",2}},{weight=0.2,item={"apexcooltable",4}}},poolRounds={{1,1}}},
+apexcoolshelf2Harvest002={pool={{weight=0.5,item={"apexcoolshelf2",1}},{weight=0.3,item={"apexcoolshelf2",2}},{weight=0.2,item={"apexcoolshelf2",4}}},poolRounds={{1,1}}},
+apexcoolshelf1Harvest002={pool={{weight=0.5,item={"apexcoolshelf1",1}},{weight=0.3,item={"apexcoolshelf1",2}},{weight=0.2,item={"apexcoolshelf1",4}}},poolRounds={{1,1}}},
+apexcoolserverHarvest002={pool={{weight=0.5,item={"apexcoolserver",1}},{weight=0.3,item={"apexcoolserver",2}},{weight=0.2,item={"apexcoolserver",4}}},poolRounds={{1,1}}},
+apexcooldoorHarvest002={pool={{weight=0.5,item={"apexcooldoor",1}},{weight=0.3,item={"apexcooldoor",2}},{weight=0.2,item={"apexcooldoor",4}}},poolRounds={{1,1}}},
+apexcooldeskHarvest002={pool={{weight=0.5,item={"apexcooldesk",1}},{weight=0.3,item={"apexcooldesk",2}},{weight=0.2,item={"apexcooldesk",4}}},poolRounds={{1,1}}},
+apexcoolcupboardHarvest002={pool={{weight=0.5,item={"apexcoolcupboard",1}},{weight=0.3,item={"apexcoolcupboard",2}},{weight=0.2,item={"apexcoolcupboard",4}}},poolRounds={{1,1}}},
+apexcoolcomputerHarvest002={pool={{weight=0.5,item={"apexcoolcomputer",1}},{weight=0.3,item={"apexcoolcomputer",2}},{weight=0.2,item={"apexcoolcomputer",4}}},poolRounds={{1,1}}},
+apexcoolchairHarvest002={pool={{weight=0.5,item={"apexcoolchair",1}},{weight=0.3,item={"apexcoolchair",2}},{weight=0.2,item={"apexcoolchair",4}}},poolRounds={{1,1}}},
+apexcoolbookcaseHarvest002={pool={{weight=0.5,item={"apexcoolbookcase",1}},{weight=0.3,item={"apexcoolbookcase",2}},{weight=0.2,item={"apexcoolbookcase",4}}},poolRounds={{1,1}}},
 apexcomfychairHarvest002={pool={{weight=0.5,item={"apexcomfychair",1}},{weight=0.3,item={"apexcomfychair",2}},{weight=0.2,item={"apexcomfychair",4}}},poolRounds={{1,1}}},
 apexconsolekeyboardHarvest002={pool={{weight=0.5,item={"apexconsolekeyboard",1}},{weight=0.3,item={"apexconsolekeyboard",2}},{weight=0.2,item={"apexconsolekeyboard",4}}},poolRounds={{1,1}}},
 apexconsole1Harvest002={pool={{weight=0.5,item={"apexconsole1",1}},{weight=0.3,item={"apexconsole1",2}},{weight=0.2,item={"apexconsole1",4}}},poolRounds={{1,1}}},
@@ -972,79 +1071,93 @@ generatedgunt6Harvest002={pool={{weight=0.01,item={"generatedgun",1,{definition=
 generatedgunt7Harvest002={pool={{weight=0.01,item={"generatedgun",1,{definition="avianblaster",level=7}}},{weight=0.01,item={"generatedgun",1,{definition="avianheavyblaster",level=7}}},{weight=0.01,item={"generatedgun",1,{definition="boneassault",level=7}}},{weight=0.01,item={"generatedgun",1,{definition="bonepistol",level=7}}},{weight=0.01,item={"generatedgun",1,{definition="boneshotgun",level=7}}},{weight=0.01,item={"generatedgun",1,{definition="cellzapper",level=7}}},{weight=0.01,item={"generatedgun",1,{definition="commonassaultrifle",level=7}}},{weight=0.01,item={"generatedgun",1,{definition="commonplasmaassaultrifle",level=7}}},{weight=0.01,item={"generatedgun",1,{definition="commonburstrifle",level=7}}},{weight=0.01,item={"generatedgun",1,{definition="commongrenadelauncher",level=7}}},{weight=0.01,item={"generatedgun",1,{definition="commonmachinepistol",level=7}}},{weight=0.01,item={"generatedgun",1,{definition="commonplasmamachinepistol",level=7}}},{weight=0.01,item={"generatedgun",1,{definition="commonpistol",level=7}}},{weight=0.01,item={"generatedgun",1,{definition="commonplasmapistol",level=7}}},{weight=0.01,item={"generatedgun",1,{definition="commonrocketlauncher",level=7}}},{weight=0.01,item={"generatedgun",1,{definition="commonshotgun",level=7}}},{weight=0.01,item={"generatedgun",1,{definition="commonplasmashotgun",level=7}}},{weight=0.01,item={"generatedgun",1,{definition="commonsniperrifle",level=7}}},{weight=0.01,item={"generatedgun",1,{definition="commonplasmasniperrifle",level=7}}},{weight=0.01,item={"generatedgun",1,{definition="crossbow",level=7}}},{weight=0.01,item={"generatedgun",1,{definition="crossbowspecial",level=7}}},{weight=0.01,item={"generatedgun",1,{definition="crossbowwood",level=7}}},{weight=0.01,item={"generatedgun",1,{definition="flamethrower",level=7}}},{weight=0.01,item={"generatedgun",1,{definition="florangrenadelauncher",level=7}}},{weight=0.01,item={"generatedgun",1,{definition="floranneedler",level=7}}},{weight=0.01,item={"generatedgun",1,{definition="globelauncher",level=7}}},{weight=0.01,item={"generatedgun",1,{definition="legendaryassaultrifle",level=7}}},{weight=0.01,item={"generatedgun",1,{definition="legendarygrenadelauncher",level=7}}},{weight=0.01,item={"generatedgun",1,{definition="legendarymachinepistol",level=7}}},{weight=0.01,item={"generatedgun",1,{definition="legendarypistol",level=7}}},{weight=0.01,item={"generatedgun",1,{definition="legendaryrocketlauncher",level=7}}},{weight=0.01,item={"generatedgun",1,{definition="legendaryshotgun",level=7}}},{weight=0.01,item={"generatedgun",1,{definition="legendarysniperrifle",level=7}}},{weight=0.01,item={"generatedgun",1,{definition="lightningcoil",level=7}}},{weight=0.01,item={"generatedgun",1,{definition="pulserifle",level=7}}},{weight=0.01,item={"generatedgun",1,{definition="rareassaultrifle",level=7}}},{weight=0.01,item={"generatedgun",1,{definition="rareplasmaassaultrifle",level=7}}},{weight=0.01,item={"generatedgun",1,{definition="raregrenadelauncher",level=7}}},{weight=0.01,item={"generatedgun",1,{definition="raremachinepistol",level=7}}},{weight=0.01,item={"generatedgun",1,{definition="rareplasmamachinepistol",level=7}}},{weight=0.01,item={"generatedgun",1,{definition="rarepistol",level=7}}},{weight=0.01,item={"generatedgun",1,{definition="rareplasmapistol",level=7}}},{weight=0.01,item={"generatedgun",1,{definition="rarerocketlauncher",level=7}}},{weight=0.01,item={"generatedgun",1,{definition="rareshotgun",level=7}}},{weight=0.01,item={"generatedgun",1,{definition="rareplasmashotgun",level=7}}},{weight=0.01,item={"generatedgun",1,{definition="raresniperrifle",level=7}}},{weight=0.01,item={"generatedgun",1,{definition="rareplasmasniperrifle",level=7}}},{weight=0.01,item={"generatedgun",1,{definition="revolver",level=7}}},{weight=0.01,item={"generatedgun",1,{definition="shattergun",level=7}}},{weight=0.01,item={"generatedgun",1,{definition="stingergun",level=7}}},{weight=0.01,item={"generatedgun",1,{definition="uncommonassaultrifle",level=7}}},{weight=0.01,item={"generatedgun",1,{definition="uncommongrenadelauncher",level=7}}},{weight=0.01,item={"generatedgun",1,{definition="uncommonmachinepistol",level=7}}},{weight=0.01,item={"generatedgun",1,{definition="uncommonpistol",level=7}}},{weight=0.01,item={"generatedgun",1,{definition="uncommonrocketlauncher",level=7}}},{weight=0.01,item={"generatedgun",1,{definition="uncommonshotgun",level=7}}},{weight=0.01,item={"generatedgun",1,{definition="uncommonplasmashotgun",level=7}}},{weight=0.01,item={"generatedgun",1,{definition="uncommonsniperrifle",level=7}}},{weight=0.01,item={"generatedgun",1,{definition="uncommonplasmasniperrifle",level=7}}},{weight=0.01,item={"generatedgun",1,{definition="uzi",level=7}}}},poolRounds={{1,1}}},
 generatedgunt8Harvest002={pool={{weight=0.01,item={"generatedgun",1,{definition="avianblaster",level=8}}},{weight=0.01,item={"generatedgun",1,{definition="avianheavyblaster",level=8}}},{weight=0.01,item={"generatedgun",1,{definition="boneassault",level=8}}},{weight=0.01,item={"generatedgun",1,{definition="bonepistol",level=8}}},{weight=0.01,item={"generatedgun",1,{definition="boneshotgun",level=8}}},{weight=0.01,item={"generatedgun",1,{definition="cellzapper",level=8}}},{weight=0.01,item={"generatedgun",1,{definition="commonassaultrifle",level=8}}},{weight=0.01,item={"generatedgun",1,{definition="commonplasmaassaultrifle",level=8}}},{weight=0.01,item={"generatedgun",1,{definition="commonburstrifle",level=8}}},{weight=0.01,item={"generatedgun",1,{definition="commongrenadelauncher",level=8}}},{weight=0.01,item={"generatedgun",1,{definition="commonmachinepistol",level=8}}},{weight=0.01,item={"generatedgun",1,{definition="commonplasmamachinepistol",level=8}}},{weight=0.01,item={"generatedgun",1,{definition="commonpistol",level=8}}},{weight=0.01,item={"generatedgun",1,{definition="commonplasmapistol",level=8}}},{weight=0.01,item={"generatedgun",1,{definition="commonrocketlauncher",level=8}}},{weight=0.01,item={"generatedgun",1,{definition="commonshotgun",level=8}}},{weight=0.01,item={"generatedgun",1,{definition="commonplasmashotgun",level=8}}},{weight=0.01,item={"generatedgun",1,{definition="commonsniperrifle",level=8}}},{weight=0.01,item={"generatedgun",1,{definition="commonplasmasniperrifle",level=8}}},{weight=0.01,item={"generatedgun",1,{definition="crossbow",level=8}}},{weight=0.01,item={"generatedgun",1,{definition="crossbowspecial",level=8}}},{weight=0.01,item={"generatedgun",1,{definition="crossbowwood",level=8}}},{weight=0.01,item={"generatedgun",1,{definition="flamethrower",level=8}}},{weight=0.01,item={"generatedgun",1,{definition="florangrenadelauncher",level=8}}},{weight=0.01,item={"generatedgun",1,{definition="floranneedler",level=8}}},{weight=0.01,item={"generatedgun",1,{definition="globelauncher",level=8}}},{weight=0.01,item={"generatedgun",1,{definition="legendaryassaultrifle",level=8}}},{weight=0.01,item={"generatedgun",1,{definition="legendarygrenadelauncher",level=8}}},{weight=0.01,item={"generatedgun",1,{definition="legendarymachinepistol",level=8}}},{weight=0.01,item={"generatedgun",1,{definition="legendarypistol",level=8}}},{weight=0.01,item={"generatedgun",1,{definition="legendaryrocketlauncher",level=8}}},{weight=0.01,item={"generatedgun",1,{definition="legendaryshotgun",level=8}}},{weight=0.01,item={"generatedgun",1,{definition="legendarysniperrifle",level=8}}},{weight=0.01,item={"generatedgun",1,{definition="lightningcoil",level=8}}},{weight=0.01,item={"generatedgun",1,{definition="pulserifle",level=8}}},{weight=0.01,item={"generatedgun",1,{definition="rareassaultrifle",level=8}}},{weight=0.01,item={"generatedgun",1,{definition="rareplasmaassaultrifle",level=8}}},{weight=0.01,item={"generatedgun",1,{definition="raregrenadelauncher",level=8}}},{weight=0.01,item={"generatedgun",1,{definition="raremachinepistol",level=8}}},{weight=0.01,item={"generatedgun",1,{definition="rareplasmamachinepistol",level=8}}},{weight=0.01,item={"generatedgun",1,{definition="rarepistol",level=8}}},{weight=0.01,item={"generatedgun",1,{definition="rareplasmapistol",level=8}}},{weight=0.01,item={"generatedgun",1,{definition="rarerocketlauncher",level=8}}},{weight=0.01,item={"generatedgun",1,{definition="rareshotgun",level=8}}},{weight=0.01,item={"generatedgun",1,{definition="rareplasmashotgun",level=8}}},{weight=0.01,item={"generatedgun",1,{definition="raresniperrifle",level=8}}},{weight=0.01,item={"generatedgun",1,{definition="rareplasmasniperrifle",level=8}}},{weight=0.01,item={"generatedgun",1,{definition="revolver",level=8}}},{weight=0.01,item={"generatedgun",1,{definition="shattergun",level=8}}},{weight=0.01,item={"generatedgun",1,{definition="stingergun",level=8}}},{weight=0.01,item={"generatedgun",1,{definition="uncommonassaultrifle",level=8}}},{weight=0.01,item={"generatedgun",1,{definition="uncommongrenadelauncher",level=8}}},{weight=0.01,item={"generatedgun",1,{definition="uncommonmachinepistol",level=8}}},{weight=0.01,item={"generatedgun",1,{definition="uncommonpistol",level=8}}},{weight=0.01,item={"generatedgun",1,{definition="uncommonrocketlauncher",level=8}}},{weight=0.01,item={"generatedgun",1,{definition="uncommonshotgun",level=8}}},{weight=0.01,item={"generatedgun",1,{definition="uncommonplasmashotgun",level=8}}},{weight=0.01,item={"generatedgun",1,{definition="uncommonsniperrifle",level=8}}},{weight=0.01,item={"generatedgun",1,{definition="uncommonplasmasniperrifle",level=8}}},{weight=0.01,item={"generatedgun",1,{definition="uzi",level=8}}}},poolRounds={{1,1}}},
 generatedgunt9Harvest002={pool={{weight=0.01,item={"generatedgun",1,{definition="avianblaster",level=9}}},{weight=0.01,item={"generatedgun",1,{definition="avianheavyblaster",level=9}}},{weight=0.01,item={"generatedgun",1,{definition="boneassault",level=9}}},{weight=0.01,item={"generatedgun",1,{definition="bonepistol",level=9}}},{weight=0.01,item={"generatedgun",1,{definition="boneshotgun",level=9}}},{weight=0.01,item={"generatedgun",1,{definition="cellzapper",level=9}}},{weight=0.01,item={"generatedgun",1,{definition="commonassaultrifle",level=9}}},{weight=0.01,item={"generatedgun",1,{definition="commonplasmaassaultrifle",level=9}}},{weight=0.01,item={"generatedgun",1,{definition="commonburstrifle",level=9}}},{weight=0.01,item={"generatedgun",1,{definition="commongrenadelauncher",level=9}}},{weight=0.01,item={"generatedgun",1,{definition="commonmachinepistol",level=9}}},{weight=0.01,item={"generatedgun",1,{definition="commonplasmamachinepistol",level=9}}},{weight=0.01,item={"generatedgun",1,{definition="commonpistol",level=9}}},{weight=0.01,item={"generatedgun",1,{definition="commonplasmapistol",level=9}}},{weight=0.01,item={"generatedgun",1,{definition="commonrocketlauncher",level=9}}},{weight=0.01,item={"generatedgun",1,{definition="commonshotgun",level=9}}},{weight=0.01,item={"generatedgun",1,{definition="commonplasmashotgun",level=9}}},{weight=0.01,item={"generatedgun",1,{definition="commonsniperrifle",level=9}}},{weight=0.01,item={"generatedgun",1,{definition="commonplasmasniperrifle",level=9}}},{weight=0.01,item={"generatedgun",1,{definition="crossbow",level=9}}},{weight=0.01,item={"generatedgun",1,{definition="crossbowspecial",level=9}}},{weight=0.01,item={"generatedgun",1,{definition="crossbowwood",level=9}}},{weight=0.01,item={"generatedgun",1,{definition="flamethrower",level=9}}},{weight=0.01,item={"generatedgun",1,{definition="florangrenadelauncher",level=9}}},{weight=0.01,item={"generatedgun",1,{definition="floranneedler",level=9}}},{weight=0.01,item={"generatedgun",1,{definition="globelauncher",level=9}}},{weight=0.01,item={"generatedgun",1,{definition="legendaryassaultrifle",level=9}}},{weight=0.01,item={"generatedgun",1,{definition="legendarygrenadelauncher",level=9}}},{weight=0.01,item={"generatedgun",1,{definition="legendarymachinepistol",level=9}}},{weight=0.01,item={"generatedgun",1,{definition="legendarypistol",level=9}}},{weight=0.01,item={"generatedgun",1,{definition="legendaryrocketlauncher",level=9}}},{weight=0.01,item={"generatedgun",1,{definition="legendaryshotgun",level=9}}},{weight=0.01,item={"generatedgun",1,{definition="legendarysniperrifle",level=9}}},{weight=0.01,item={"generatedgun",1,{definition="lightningcoil",level=9}}},{weight=0.01,item={"generatedgun",1,{definition="pulserifle",level=9}}},{weight=0.01,item={"generatedgun",1,{definition="rareassaultrifle",level=9}}},{weight=0.01,item={"generatedgun",1,{definition="rareplasmaassaultrifle",level=9}}},{weight=0.01,item={"generatedgun",1,{definition="raregrenadelauncher",level=9}}},{weight=0.01,item={"generatedgun",1,{definition="raremachinepistol",level=9}}},{weight=0.01,item={"generatedgun",1,{definition="rareplasmamachinepistol",level=9}}},{weight=0.01,item={"generatedgun",1,{definition="rarepistol",level=9}}},{weight=0.01,item={"generatedgun",1,{definition="rareplasmapistol",level=9}}},{weight=0.01,item={"generatedgun",1,{definition="rarerocketlauncher",level=9}}},{weight=0.01,item={"generatedgun",1,{definition="rareshotgun",level=9}}},{weight=0.01,item={"generatedgun",1,{definition="rareplasmashotgun",level=9}}},{weight=0.01,item={"generatedgun",1,{definition="raresniperrifle",level=9}}},{weight=0.01,item={"generatedgun",1,{definition="rareplasmasniperrifle",level=9}}},{weight=0.01,item={"generatedgun",1,{definition="revolver",level=9}}},{weight=0.01,item={"generatedgun",1,{definition="shattergun",level=9}}},{weight=0.01,item={"generatedgun",1,{definition="stingergun",level=9}}},{weight=0.01,item={"generatedgun",1,{definition="uncommonassaultrifle",level=9}}},{weight=0.01,item={"generatedgun",1,{definition="uncommongrenadelauncher",level=9}}},{weight=0.01,item={"generatedgun",1,{definition="uncommonmachinepistol",level=9}}},{weight=0.01,item={"generatedgun",1,{definition="uncommonpistol",level=9}}},{weight=0.01,item={"generatedgun",1,{definition="uncommonrocketlauncher",level=9}}},{weight=0.01,item={"generatedgun",1,{definition="uncommonshotgun",level=9}}},{weight=0.01,item={"generatedgun",1,{definition="uncommonplasmashotgun",level=9}}},{weight=0.01,item={"generatedgun",1,{definition="uncommonsniperrifle",level=9}}},{weight=0.01,item={"generatedgun",1,{definition="uncommonplasmasniperrifle",level=9}}},{weight=0.01,item={"generatedgun",1,{definition="uzi",level=9}}}},poolRounds={{1,1}}},
-generatedgunt10Harvest002={pool={{weight=0.01,item={"generatedgun",1,{definition="avianblaster",level=10}}},{weight=0.01,item={"generatedgun",1,{definition="avianheavyblaster",level=10}}},{weight=0.01,item={"generatedgun",1,{definition="boneassault",level=10}}},{weight=0.01,item={"generatedgun",1,{definition="bonepistol",level=10}}},{weight=0.01,item={"generatedgun",1,{definition="boneshotgun",level=10}}},{weight=0.01,item={"generatedgun",1,{definition="cellzapper",level=10}}},{weight=0.01,item={"generatedgun",1,{definition="commonassaultrifle",level=10}}},{weight=0.01,item={"generatedgun",1,{definition="commonplasmaassaultrifle",level=10}}},{weight=0.01,item={"generatedgun",1,{definition="commonburstrifle",level=10}}},{weight=0.01,item={"generatedgun",1,{definition="commongrenadelauncher",level=10}}},{weight=0.01,item={"generatedgun",1,{definition="commonmachinepistol",level=10}}},{weight=0.01,item={"generatedgun",1,{definition="commonplasmamachinepistol",level=10}}},{weight=0.01,item={"generatedgun",1,{definition="commonpistol",level=10}}},{weight=0.01,item={"generatedgun",1,{definition="commonplasmapistol",level=10}}},{weight=0.01,item={"generatedgun",1,{definition="commonrocketlauncher",level=10}}},{weight=0.01,item={"generatedgun",1,{definition="commonshotgun",level=10}}},{weight=0.01,item={"generatedgun",1,{definition="commonplasmashotgun",level=10}}},{weight=0.01,item={"generatedgun",1,{definition="commonsniperrifle",level=10}}},{weight=0.01,item={"generatedgun",1,{definition="commonplasmasniperrifle",level=10}}},{weight=0.01,item={"generatedgun",1,{definition="crossbow",level=10}}},{weight=0.01,item={"generatedgun",1,{definition="crossbowspecial",level=10}}},{weight=0.01,item={"generatedgun",1,{definition="crossbowwood",level=10}}},{weight=0.01,item={"generatedgun",1,{definition="flamethrower",level=10}}},{weight=0.01,item={"generatedgun",1,{definition="florangrenadelauncher",level=10}}},{weight=0.01,item={"generatedgun",1,{definition="floranneedler",level=10}}},{weight=0.01,item={"generatedgun",1,{definition="globelauncher",level=10}}},{weight=0.01,item={"generatedgun",1,{definition="legendaryassaultrifle",level=10}}},{weight=0.01,item={"generatedgun",1,{definition="legendarygrenadelauncher",level=10}}},{weight=0.01,item={"generatedgun",1,{definition="legendarymachinepistol",level=10}}},{weight=0.01,item={"generatedgun",1,{definition="legendarypistol",level=10}}},{weight=0.01,item={"generatedgun",1,{definition="legendaryrocketlauncher",level=10}}},{weight=0.01,item={"generatedgun",1,{definition="legendaryshotgun",level=10}}},{weight=0.01,item={"generatedgun",1,{definition="legendarysniperrifle",level=10}}},{weight=0.01,item={"generatedgun",1,{definition="lightningcoil",level=10}}},{weight=0.01,item={"generatedgun",1,{definition="pulserifle",level=10}}},{weight=0.01,item={"generatedgun",1,{definition="rareassaultrifle",level=10}}},{weight=0.01,item={"generatedgun",1,{definition="rareplasmaassaultrifle",level=10}}},{weight=0.01,item={"generatedgun",1,{definition="raregrenadelauncher",level=10}}},{weight=0.01,item={"generatedgun",1,{definition="raremachinepistol",level=10}}},{weight=0.01,item={"generatedgun",1,{definition="rareplasmamachinepistol",level=10}}},{weight=0.01,item={"generatedgun",1,{definition="rarepistol",level=10}}},{weight=0.01,item={"generatedgun",1,{definition="rareplasmapistol",level=10}}},{weight=0.01,item={"generatedgun",1,{definition="rarerocketlauncher",level=10}}},{weight=0.01,item={"generatedgun",1,{definition="rareshotgun",level=10}}},{weight=0.01,item={"generatedgun",1,{definition="rareplasmashotgun",level=10}}},{weight=0.01,item={"generatedgun",1,{definition="raresniperrifle",level=10}}},{weight=0.01,item={"generatedgun",1,{definition="rareplasmasniperrifle",level=10}}},{weight=0.01,item={"generatedgun",1,{definition="revolver",level=10}}},{weight=0.01,item={"generatedgun",1,{definition="shattergun",level=10}}},{weight=0.01,item={"generatedgun",1,{definition="stingergun",level=10}}},{weight=0.01,item={"generatedgun",1,{definition="uncommonassaultrifle",level=10}}},{weight=0.01,item={"generatedgun",1,{definition="uncommongrenadelauncher",level=10}}},{weight=0.01,item={"generatedgun",1,{definition="uncommonmachinepistol",level=10}}},{weight=0.01,item={"generatedgun",1,{definition="uncommonpistol",level=10}}},{weight=0.01,item={"generatedgun",1,{definition="uncommonrocketlauncher",level=10}}},{weight=0.01,item={"generatedgun",1,{definition="uncommonshotgun",level=10}}},{weight=0.01,item={"generatedgun",1,{definition="uncommonplasmashotgun",level=10}}},{weight=0.01,item={"generatedgun",1,{definition="uncommonsniperrifle",level=10}}},{weight=0.01,item={"generatedgun",1,{definition="uncommonplasmasniperrifle",level=10}}},{weight=0.01,item={"generatedgun",1,{definition="uzi",level=10}}}},poolRounds={{1,1}}}
+generatedgunt10Harvest002={pool={{weight=0.01,item={"generatedgun",1,{definition="avianblaster",level=10}}},{weight=0.01,item={"generatedgun",1,{definition="avianheavyblaster",level=10}}},{weight=0.01,item={"generatedgun",1,{definition="boneassault",level=10}}},{weight=0.01,item={"generatedgun",1,{definition="bonepistol",level=10}}},{weight=0.01,item={"generatedgun",1,{definition="boneshotgun",level=10}}},{weight=0.01,item={"generatedgun",1,{definition="cellzapper",level=10}}},{weight=0.01,item={"generatedgun",1,{definition="commonassaultrifle",level=10}}},{weight=0.01,item={"generatedgun",1,{definition="commonplasmaassaultrifle",level=10}}},{weight=0.01,item={"generatedgun",1,{definition="commonburstrifle",level=10}}},{weight=0.01,item={"generatedgun",1,{definition="commongrenadelauncher",level=10}}},{weight=0.01,item={"generatedgun",1,{definition="commonmachinepistol",level=10}}},{weight=0.01,item={"generatedgun",1,{definition="commonplasmamachinepistol",level=10}}},{weight=0.01,item={"generatedgun",1,{definition="commonpistol",level=10}}},{weight=0.01,item={"generatedgun",1,{definition="commonplasmapistol",level=10}}},{weight=0.01,item={"generatedgun",1,{definition="commonrocketlauncher",level=10}}},{weight=0.01,item={"generatedgun",1,{definition="commonshotgun",level=10}}},{weight=0.01,item={"generatedgun",1,{definition="commonplasmashotgun",level=10}}},{weight=0.01,item={"generatedgun",1,{definition="commonsniperrifle",level=10}}},{weight=0.01,item={"generatedgun",1,{definition="commonplasmasniperrifle",level=10}}},{weight=0.01,item={"generatedgun",1,{definition="crossbow",level=10}}},{weight=0.01,item={"generatedgun",1,{definition="crossbowspecial",level=10}}},{weight=0.01,item={"generatedgun",1,{definition="crossbowwood",level=10}}},{weight=0.01,item={"generatedgun",1,{definition="flamethrower",level=10}}},{weight=0.01,item={"generatedgun",1,{definition="florangrenadelauncher",level=10}}},{weight=0.01,item={"generatedgun",1,{definition="floranneedler",level=10}}},{weight=0.01,item={"generatedgun",1,{definition="globelauncher",level=10}}},{weight=0.01,item={"generatedgun",1,{definition="legendaryassaultrifle",level=10}}},{weight=0.01,item={"generatedgun",1,{definition="legendarygrenadelauncher",level=10}}},{weight=0.01,item={"generatedgun",1,{definition="legendarymachinepistol",level=10}}},{weight=0.01,item={"generatedgun",1,{definition="legendarypistol",level=10}}},{weight=0.01,item={"generatedgun",1,{definition="legendaryrocketlauncher",level=10}}},{weight=0.01,item={"generatedgun",1,{definition="legendaryshotgun",level=10}}},{weight=0.01,item={"generatedgun",1,{definition="legendarysniperrifle",level=10}}},{weight=0.01,item={"generatedgun",1,{definition="lightningcoil",level=10}}},{weight=0.01,item={"generatedgun",1,{definition="pulserifle",level=10}}},{weight=0.01,item={"generatedgun",1,{definition="rareassaultrifle",level=10}}},{weight=0.01,item={"generatedgun",1,{definition="rareplasmaassaultrifle",level=10}}},{weight=0.01,item={"generatedgun",1,{definition="raregrenadelauncher",level=10}}},{weight=0.01,item={"generatedgun",1,{definition="raremachinepistol",level=10}}},{weight=0.01,item={"generatedgun",1,{definition="rareplasmamachinepistol",level=10}}},{weight=0.01,item={"generatedgun",1,{definition="rarepistol",level=10}}},{weight=0.01,item={"generatedgun",1,{definition="rareplasmapistol",level=10}}},{weight=0.01,item={"generatedgun",1,{definition="rarerocketlauncher",level=10}}},{weight=0.01,item={"generatedgun",1,{definition="rareshotgun",level=10}}},{weight=0.01,item={"generatedgun",1,{definition="rareplasmashotgun",level=10}}},{weight=0.01,item={"generatedgun",1,{definition="raresniperrifle",level=10}}},{weight=0.01,item={"generatedgun",1,{definition="rareplasmasniperrifle",level=10}}},{weight=0.01,item={"generatedgun",1,{definition="revolver",level=10}}},{weight=0.01,item={"generatedgun",1,{definition="shattergun",level=10}}},{weight=0.01,item={"generatedgun",1,{definition="stingergun",level=10}}},{weight=0.01,item={"generatedgun",1,{definition="uncommonassaultrifle",level=10}}},{weight=0.01,item={"generatedgun",1,{definition="uncommongrenadelauncher",level=10}}},{weight=0.01,item={"generatedgun",1,{definition="uncommonmachinepistol",level=10}}},{weight=0.01,item={"generatedgun",1,{definition="uncommonpistol",level=10}}},{weight=0.01,item={"generatedgun",1,{definition="uncommonrocketlauncher",level=10}}},{weight=0.01,item={"generatedgun",1,{definition="uncommonshotgun",level=10}}},{weight=0.01,item={"generatedgun",1,{definition="uncommonplasmashotgun",level=10}}},{weight=0.01,item={"generatedgun",1,{definition="uncommonsniperrifle",level=10}}},{weight=0.01,item={"generatedgun",1,{definition="uncommonplasmasniperrifle",level=10}}},{weight=0.01,item={"generatedgun",1,{definition="uzi",level=10}}}},poolRounds={{1,1}}},
+-- Oreplants+ FU addon v. 10.0 (80 entries)
+liquidbiooozeHarvest={pool={{weight=0.5,item={"liquidbioooze",5}},{weight=0.3,item={"liquidbioooze",10}},{weight=0.2,item={"liquidbioooze",20}}},poolRounds={{1.0,1}}},
+liquidbiooozet2Harvest={pool={{weight=0.5,item={"liquidbioooze",10}},{weight=0.3,item={"liquidbioooze",20}},{weight=0.2,item={"liquidbioooze",40}}},poolRounds={{1.0,1}}},
+liquidbiooozet3Harvest={pool={{weight=0.5,item={"liquidbioooze",20}},{weight=0.3,item={"liquidbioooze",40}},{weight=0.2,item={"liquidbioooze",80}}},poolRounds={{1.0,1}}},
+liquidbiooozet4Harvest={pool={{weight=0.5,item={"liquidbioooze",40}},{weight=0.3,item={"liquidbioooze",80}},{weight=0.2,item={"liquidbioooze",160}}},poolRounds={{1.0,1}}},
+liquidblacktarHarvest={pool={{weight=0.5,item={"liquidblacktar",5}},{weight=0.3,item={"liquidblacktar",10}},{weight=0.2,item={"liquidblacktar",20}}},poolRounds={{1.0,1}}},
+liquidblacktart2Harvest={pool={{weight=0.5,item={"liquidblacktar",10}},{weight=0.3,item={"liquidblacktar",20}},{weight=0.2,item={"liquidblacktar",40}}},poolRounds={{1.0,1}}},
+liquidblacktart3Harvest={pool={{weight=0.5,item={"liquidblacktar",20}},{weight=0.3,item={"liquidblacktar",40}},{weight=0.2,item={"liquidblacktar",80}}},poolRounds={{1.0,1}}},
+liquidblacktart4Harvest={pool={{weight=0.5,item={"liquidblacktar",40}},{weight=0.3,item={"liquidblacktar",80}},{weight=0.2,item={"liquidblacktar",160}}},poolRounds={{1.0,1}}},
+liquidbloodHarvest={pool={{weight=0.5,item={"liquidblood",5}},{weight=0.3,item={"liquidblood",10}},{weight=0.2,item={"liquidblood",20}}},poolRounds={{1.0,1}}},
+liquidbloodt2Harvest={pool={{weight=0.5,item={"liquidblood",10}},{weight=0.3,item={"liquidblood",20}},{weight=0.2,item={"liquidblood",40}}},poolRounds={{1.0,1}}},
+liquidbloodt3Harvest={pool={{weight=0.5,item={"liquidblood",20}},{weight=0.3,item={"liquidblood",40}},{weight=0.2,item={"liquidblood",80}}},poolRounds={{1.0,1}}},
+liquidbloodt4Harvest={pool={{weight=0.5,item={"liquidblood",40}},{weight=0.3,item={"liquidblood",80}},{weight=0.2,item={"liquidblood",160}}},poolRounds={{1.0,1}}},
+liquidirradiumHarvest={pool={{weight=0.5,item={"liquidirradium",5}},{weight=0.3,item={"liquidirradium",10}},{weight=0.2,item={"liquidirradium",20}}},poolRounds={{1.0,1}}},
+liquidirradiumt2Harvest={pool={{weight=0.5,item={"liquidirradium",10}},{weight=0.3,item={"liquidirradium",20}},{weight=0.2,item={"liquidirradium",40}}},poolRounds={{1.0,1}}},
+liquidirradiumt3Harvest={pool={{weight=0.5,item={"liquidirradium",20}},{weight=0.3,item={"liquidirradium",40}},{weight=0.2,item={"liquidirradium",80}}},poolRounds={{1.0,1}}},
+liquidirradiumt4Harvest={pool={{weight=0.5,item={"liquidirradium",40}},{weight=0.3,item={"liquidirradium",80}},{weight=0.2,item={"liquidirradium",160}}},poolRounds={{1.0,1}}},
+liquidmercuryHarvest={pool={{weight=0.5,item={"liquidmercury",5}},{weight=0.3,item={"liquidmercury",10}},{weight=0.2,item={"liquidmercury",20}}},poolRounds={{1.0,1}}},
+liquidmercuryt2Harvest={pool={{weight=0.5,item={"liquidmercury",10}},{weight=0.3,item={"liquidmercury",20}},{weight=0.2,item={"liquidmercury",40}}},poolRounds={{1.0,1}}},
+liquidmercuryt3Harvest={pool={{weight=0.5,item={"liquidmercury",20}},{weight=0.3,item={"liquidmercury",40}},{weight=0.2,item={"liquidmercury",80}}},poolRounds={{1.0,1}}},
+liquidmercuryt4Harvest={pool={{weight=0.5,item={"liquidmercury",40}},{weight=0.3,item={"liquidmercury",80}},{weight=0.2,item={"liquidmercury",160}}},poolRounds={{1.0,1}}},
+liquidnitrogenitemHarvest={pool={{weight=0.5,item={"liquidnitrogenitem",5}},{weight=0.3,item={"liquidnitrogenitem",10}},{weight=0.2,item={"liquidnitrogenitem",20}}},poolRounds={{1.0,1}}},
+liquidnitrogenitemt2Harvest={pool={{weight=0.5,item={"liquidnitrogenitem",10}},{weight=0.3,item={"liquidnitrogenitem",20}},{weight=0.2,item={"liquidnitrogenitem",40}}},poolRounds={{1.0,1}}},
+liquidnitrogenitemt3Harvest={pool={{weight=0.5,item={"liquidnitrogenitem",20}},{weight=0.3,item={"liquidnitrogenitem",40}},{weight=0.2,item={"liquidnitrogenitem",80}}},poolRounds={{1.0,1}}},
+liquidnitrogenitemt4Harvest={pool={{weight=0.5,item={"liquidnitrogenitem",40}},{weight=0.3,item={"liquidnitrogenitem",80}},{weight=0.2,item={"liquidnitrogenitem",160}}},poolRounds={{1.0,1}}},
+liquidorganicsoupHarvest={pool={{weight=0.5,item={"liquidorganicsoup",5}},{weight=0.3,item={"liquidorganicsoup",10}},{weight=0.2,item={"liquidorganicsoup",20}}},poolRounds={{1.0,1}}},
+liquidorganicsoupt2Harvest={pool={{weight=0.5,item={"liquidorganicsoup",10}},{weight=0.3,item={"liquidorganicsoup",20}},{weight=0.2,item={"liquidorganicsoup",40}}},poolRounds={{1.0,1}}},
+liquidorganicsoupt3Harvest={pool={{weight=0.5,item={"liquidorganicsoup",20}},{weight=0.3,item={"liquidorganicsoup",40}},{weight=0.2,item={"liquidorganicsoup",80}}},poolRounds={{1.0,1}}},
+liquidorganicsoupt4Harvest={pool={{weight=0.5,item={"liquidorganicsoup",40}},{weight=0.3,item={"liquidorganicsoup",80}},{weight=0.2,item={"liquidorganicsoup",160}}},poolRounds={{1.0,1}}},
+liquidsulphuricacidHarvest={pool={{weight=0.5,item={"liquidsulphuricacid",5}},{weight=0.3,item={"liquidsulphuricacid",10}},{weight=0.2,item={"liquidsulphuricacid",20}}},poolRounds={{1.0,1}}},
+liquidsulphuricacidt2Harvest={pool={{weight=0.5,item={"liquidsulphuricacid",10}},{weight=0.3,item={"liquidsulphuricacid",20}},{weight=0.2,item={"liquidsulphuricacid",40}}},poolRounds={{1.0,1}}},
+liquidsulphuricacidt3Harvest={pool={{weight=0.5,item={"liquidsulphuricacid",20}},{weight=0.3,item={"liquidsulphuricacid",40}},{weight=0.2,item={"liquidsulphuricacid",80}}},poolRounds={{1.0,1}}},
+liquidsulphuricacidt4Harvest={pool={{weight=0.5,item={"liquidsulphuricacid",40}},{weight=0.3,item={"liquidsulphuricacid",80}},{weight=0.2,item={"liquidsulphuricacid",160}}},poolRounds={{1.0,1}}},
+vialprotoHarvest={pool={{weight=0.5,item={"vialproto",5}},{weight=0.3,item={"vialproto",10}},{weight=0.2,item={"vialproto",20}}},poolRounds={{1.0,1}}},
+vialprotot2Harvest={pool={{weight=0.5,item={"vialproto",10}},{weight=0.3,item={"vialproto",20}},{weight=0.2,item={"vialproto",40}}},poolRounds={{1.0,1}}},
+vialprotot3Harvest={pool={{weight=0.5,item={"vialproto",20}},{weight=0.3,item={"vialproto",40}},{weight=0.2,item={"vialproto",80}}},poolRounds={{1.0,1}}},
+vialprotot4Harvest={pool={{weight=0.5,item={"vialproto",40}},{weight=0.3,item={"vialproto",80}},{weight=0.2,item={"vialproto",160}}},poolRounds={{1.0,1}}},
+shadowgasliquidHarvest={pool={{weight=0.5,item={"shadowgasliquid",5}},{weight=0.3,item={"shadowgasliquid",10}},{weight=0.2,item={"shadowgasliquid",20}}},poolRounds={{1.0,1}}},
+shadowgasliquidt2Harvest={pool={{weight=0.5,item={"shadowgasliquid",10}},{weight=0.3,item={"shadowgasliquid",20}},{weight=0.2,item={"shadowgasliquid",40}}},poolRounds={{1.0,1}}},
+shadowgasliquidt3Harvest={pool={{weight=0.5,item={"shadowgasliquid",20}},{weight=0.3,item={"shadowgasliquid",40}},{weight=0.2,item={"shadowgasliquid",80}}},poolRounds={{1.0,1}}},
+shadowgasliquidt4Harvest={pool={{weight=0.5,item={"shadowgasliquid",40}},{weight=0.3,item={"shadowgasliquid",80}},{weight=0.2,item={"shadowgasliquid",160}}},poolRounds={{1.0,1}}},
+helium3gasliquidHarvest={pool={{weight=0.5,item={"helium3gasliquid",5}},{weight=0.3,item={"helium3gasliquid",10}},{weight=0.2,item={"helium3gasliquid",20}}},poolRounds={{1.0,1}}},
+helium3gasliquidt2Harvest={pool={{weight=0.5,item={"helium3gasliquid",10}},{weight=0.3,item={"helium3gasliquid",20}},{weight=0.2,item={"helium3gasliquid",40}}},poolRounds={{1.0,1}}},
+helium3gasliquidt3Harvest={pool={{weight=0.5,item={"helium3gasliquid",20}},{weight=0.3,item={"helium3gasliquid",40}},{weight=0.2,item={"helium3gasliquid",80}}},poolRounds={{1.0,1}}},
+helium3gasliquidt4Harvest={pool={{weight=0.5,item={"helium3gasliquid",40}},{weight=0.3,item={"helium3gasliquid",80}},{weight=0.2,item={"helium3gasliquid",160}}},poolRounds={{1.0,1}}},
+berliniteoreHarvest={pool={{weight=0.5,item={"berliniteore",1}},{weight=0.3,item={"berliniteore",2}},{weight=0.2,item={"berliniteore",4}}},poolRounds={{1.0,1}}},
+berliniteoret2Harvest={pool={{weight=0.5,item={"berliniteore",2}},{weight=0.3,item={"berliniteore",4}},{weight=0.2,item={"berliniteore",8}}},poolRounds={{1.0,1}}},
+berliniteoret3Harvest={pool={{weight=0.5,item={"berliniteore",4}},{weight=0.3,item={"berliniteore",8}},{weight=0.2,item={"berliniteore",16}}},poolRounds={{1.0,1}}},
+berliniteoret4Harvest={pool={{weight=0.5,item={"berliniteore",8}},{weight=0.3,item={"berliniteore",16}},{weight=0.2,item={"berliniteore",32}}},poolRounds={{1.0,1}}},
+cinnabaroreHarvest={pool={{weight=0.5,item={"cinnabarore",1}},{weight=0.3,item={"cinnabarore",2}},{weight=0.2,item={"cinnabarore",4}}},poolRounds={{1.0,1}}},
+cinnabaroret2Harvest={pool={{weight=0.5,item={"cinnabarore",2}},{weight=0.3,item={"cinnabarore",4}},{weight=0.2,item={"cinnabarore",8}}},poolRounds={{1.0,1}}},
+cinnabaroret3Harvest={pool={{weight=0.5,item={"cinnabarore",4}},{weight=0.3,item={"cinnabarore",8}},{weight=0.2,item={"cinnabarore",16}}},poolRounds={{1.0,1}}},
+cinnabaroret4Harvest={pool={{weight=0.5,item={"cinnabarore",8}},{weight=0.3,item={"cinnabarore",16}},{weight=0.2,item={"cinnabarore",32}}},poolRounds={{1.0,1}}},
+densiniumoreHarvest={pool={{weight=0.5,item={"densiniumore",1}},{weight=0.3,item={"densiniumore",2}},{weight=0.2,item={"densiniumore",4}}},poolRounds={{1.0,1}}},
+densiniumoret2Harvest={pool={{weight=0.5,item={"densiniumore",2}},{weight=0.3,item={"densiniumore",4}},{weight=0.2,item={"densiniumore",8}}},poolRounds={{1.0,1}}},
+densiniumoret3Harvest={pool={{weight=0.5,item={"densiniumore",4}},{weight=0.3,item={"densiniumore",8}},{weight=0.2,item={"densiniumore",16}}},poolRounds={{1.0,1}}},
+densiniumoret4Harvest={pool={{weight=0.5,item={"densiniumore",8}},{weight=0.3,item={"densiniumore",16}},{weight=0.2,item={"densiniumore",32}}},poolRounds={{1.0,1}}},
+irradiumoreHarvest={pool={{weight=0.5,item={"irradiumore",1}},{weight=0.3,item={"irradiumore",2}},{weight=0.2,item={"irradiumore",4}}},poolRounds={{1.0,1}}},
+irradiumoret2Harvest={pool={{weight=0.5,item={"irradiumore",2}},{weight=0.3,item={"irradiumore",4}},{weight=0.2,item={"irradiumore",8}}},poolRounds={{1.0,1}}},
+irradiumoret3Harvest={pool={{weight=0.5,item={"irradiumore",4}},{weight=0.3,item={"irradiumore",8}},{weight=0.2,item={"irradiumore",16}}},poolRounds={{1.0,1}}},
+irradiumoret4Harvest={pool={{weight=0.5,item={"irradiumore",8}},{weight=0.3,item={"irradiumore",16}},{weight=0.2,item={"irradiumore",32}}},poolRounds={{1.0,1}}},
+lazuliteoreHarvest={pool={{weight=0.5,item={"lazuliteore",1}},{weight=0.3,item={"lazuliteore",2}},{weight=0.2,item={"lazuliteore",4}}},poolRounds={{1.0,1}}},
+lazuliteoret2Harvest={pool={{weight=0.5,item={"lazuliteore",2}},{weight=0.3,item={"lazuliteore",4}},{weight=0.2,item={"lazuliteore",8}}},poolRounds={{1.0,1}}},
+lazuliteoret3Harvest={pool={{weight=0.5,item={"lazuliteore",4}},{weight=0.3,item={"lazuliteore",8}},{weight=0.2,item={"lazuliteore",16}}},poolRounds={{1.0,1}}},
+lazuliteoret4Harvest={pool={{weight=0.5,item={"lazuliteore",8}},{weight=0.3,item={"lazuliteore",16}},{weight=0.2,item={"lazuliteore",32}}},poolRounds={{1.0,1}}},
+magnesiumoreHarvest={pool={{weight=0.5,item={"magnesiumore",1}},{weight=0.3,item={"magnesiumore",2}},{weight=0.2,item={"magnesiumore",4}}},poolRounds={{1.0,1}}},
+magnesiumoret2Harvest={pool={{weight=0.5,item={"magnesiumore",2}},{weight=0.3,item={"magnesiumore",4}},{weight=0.2,item={"magnesiumore",8}}},poolRounds={{1.0,1}}},
+magnesiumoret3Harvest={pool={{weight=0.5,item={"magnesiumore",4}},{weight=0.3,item={"magnesiumore",8}},{weight=0.2,item={"magnesiumore",16}}},poolRounds={{1.0,1}}},
+magnesiumoret4Harvest={pool={{weight=0.5,item={"magnesiumore",8}},{weight=0.3,item={"magnesiumore",16}},{weight=0.2,item={"magnesiumore",32}}},poolRounds={{1.0,1}}},
+mascagniteoreHarvest={pool={{weight=0.5,item={"mascagniteore",1}},{weight=0.3,item={"mascagniteore",2}},{weight=0.2,item={"mascagniteore",4}}},poolRounds={{1.0,1}}},
+mascagniteoret2Harvest={pool={{weight=0.5,item={"mascagniteore",2}},{weight=0.3,item={"mascagniteore",4}},{weight=0.2,item={"mascagniteore",8}}},poolRounds={{1.0,1}}},
+mascagniteoret3Harvest={pool={{weight=0.5,item={"mascagniteore",4}},{weight=0.3,item={"mascagniteore",8}},{weight=0.2,item={"mascagniteore",16}}},poolRounds={{1.0,1}}},
+mascagniteoret4Harvest={pool={{weight=0.5,item={"mascagniteore",8}},{weight=0.3,item={"mascagniteore",16}},{weight=0.2,item={"mascagniteore",32}}},poolRounds={{1.0,1}}},
+penumbriteoreHarvest={pool={{weight=0.5,item={"penumbriteore",1}},{weight=0.3,item={"penumbriteore",2}},{weight=0.2,item={"penumbriteore",4}}},poolRounds={{1.0,1}}},
+penumbriteoret2Harvest={pool={{weight=0.5,item={"penumbriteore",2}},{weight=0.3,item={"penumbriteore",4}},{weight=0.2,item={"penumbriteore",8}}},poolRounds={{1.0,1}}},
+penumbriteoret3Harvest={pool={{weight=0.5,item={"penumbriteore",4}},{weight=0.3,item={"penumbriteore",8}},{weight=0.2,item={"penumbriteore",16}}},poolRounds={{1.0,1}}},
+penumbriteoret4Harvest={pool={{weight=0.5,item={"penumbriteore",8}},{weight=0.3,item={"penumbriteore",16}},{weight=0.2,item={"penumbriteore",32}}},poolRounds={{1.0,1}}},
+protociteoreHarvest={pool={{weight=0.5,item={"protociteore",1}},{weight=0.3,item={"protociteore",2}},{weight=0.2,item={"protociteore",4}}},poolRounds={{1.0,1}}},
+protociteoret2Harvest={pool={{weight=0.5,item={"protociteore",2}},{weight=0.3,item={"protociteore",4}},{weight=0.2,item={"protociteore",8}}},poolRounds={{1.0,1}}},
+protociteoret3Harvest={pool={{weight=0.5,item={"protociteore",4}},{weight=0.3,item={"protociteore",8}},{weight=0.2,item={"protociteore",16}}},poolRounds={{1.0,1}}},
+protociteoret4Harvest={pool={{weight=0.5,item={"protociteore",8}},{weight=0.3,item={"protociteore",16}},{weight=0.2,item={"protociteore",32}}},poolRounds={{1.0,1}}}
 
 } -- end of pool list
 pools["2kbpotageHarvest002"]={pool={{weight=0.5,item={"2kbpotage",1}},{weight=0.3,item={"2kbpotage",2}},{weight=0.2,item={"2kbpotage",4}}},poolRounds={{1,1}}}
 -- fix 2k pot - lua didnt like label starting with a number
 
-  if pools[poolname] == nil then return false -- not listed
-  
-  else -- is listed in known pools, generate dat bling
-    local tp = pools[poolname]
-    local didSpawn = false
-    if tp.fill ~= nil then -- spawn 'always drop' items
-      for i = 1,#tp.fill do
-        harvestPools.doSpawnItem(pos,tp.fill[i].item)
-        didSpawn = true
-      end
-    end
-    if tp.pool ~= nil then -- spawn 'maybe drop' items
-      local maxrnd = numRounds(tp.poolRounds)
-      for i = 1, maxrnd do
-        local ritem = tp.pool[math.random(1,#tp.pool)]
-        if math.random() <= poolWeight(ritem) then
-          harvestPools.doSpawnItem(pos,ritem.item)
-          didSpawn = true
-        end
-      end
-    end
-    return didSpawn
-  end
-  return false
-end
+return pools[poolname]
 
----------------------------------------------------------------------------------------
---------------  helper funcs
----------------------------------------------------------------------------------------
-
-function numRounds(poolRounds)--randomize # rounds of pool spawning, returning 0 is ok
-  if type(poolRounds) == "table" then -- usually a table of tables
-    for i = #poolRounds,1,-1 do
-      if math.random() <= poolRounds[i][1] or i == 1 then return poolRounds[i][2] end
-    end
-  end
-  return 0
-end
-
-function poolWeight(pool)
-if pool.weight ~= nil then return pool.weight end
-return 1
-end 
-
-function itemName(item)
-  if type(item) == "string" then return item end
-  if type(item) == "table" then return item[1] end
-  return "perfectlygenericitem" -- shouldnt ever get here.. 
-end
-
-function itemCount(item)
-if type(item) == "table" and item[2] ~= nil then return item[2] end
-return 1
-end
-
-function itemParams(item) -- for stuff with params, generated weps etc.
-if type(item) == "table" and item[3] ~= nil then return item[3] end
-return {}
-end
-
-
-function harvestPools.doSpawnItem(pos,item)
---world.logInfo("Spawning: %s",item)
-iName = itemName(item)
-iCnt = itemCount(item)
-iParam = itemParams(item)
-  if not world.spawnItem(iName,pos,iCnt,iParam) then 
-    world.logInfo("Failed to spawn item: %s",item)
-  end
 end

@@ -22,7 +22,7 @@ function depositState.enter()
 end
 --------------------------------------------------------------------------------
 function depositState.update(dt, stateData)
-  if stateData.targetPosition == nil then
+  if stateData.targetPosition == nil or stateData.targetId == nil then
     return true,entity.configParameter("gardenSettings.cooldown", 15)
   end
   stateData.timer = stateData.timer - dt
@@ -47,13 +47,15 @@ util.debugLine(mcontroller.position(),vec2.add(mcontroller.position(),toTarget),
       --self.inv.add(seeds)
       self.inv.putInContainer(stateData.targetId)
       world.containerClose(stateData.targetId)
-      return true,entity.configParameter("gardenSettings.cooldown", 15)*2 -- lpk:ignore deposit for a while
+--      chatNearbyPlayerOrBot()
+      return true    
     end
   else
     move({toTarget[1], toTarget[2]+1})
   end
 
-  return stateData.timer < 0
+  return stateData.timer < 0,entity.configParameter("gardenSettings.cooldown", 15)*2 -- lpk:ignore deposit for a while
+
 end
 --------------------------------------------------------------------------------
 function depositState.findTargetPosition(position)

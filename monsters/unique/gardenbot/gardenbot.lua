@@ -47,7 +47,7 @@ function gardenbot.damage(args)
   end
 
   if entity.health() <= 0 and not self.dead then -- lpk: also check dead to fix dupe exploit ;(
---util.debugLog("status: %s\nscript: %s",status,script)
+--util.debugLog("universe: %s\nbleh: %s",universe,nil)
   if self.isCodeProfiling then profilerApi.logData() end
     local spawner = nil
     if entity.type() then spawner = entity.type() .. "spawner" end
@@ -176,11 +176,9 @@ function maybeKickPetball() -- kick ball instead of damaging it, not that bot di
 end
 --------------------------------------------------------------------------------
 function chatNearbyPlayerOrBot()
--- report current inventory to players
+-- report current inventory to players ?
 -- binary art for bots - icons built into hobo etc.
-
-  --  entity.say("01000101") "ð«"
-  --  entity.say("ԑ)҈ (Ӟ") "E{0}3" "∈)☼(∋"  "ԑ(þ)Ӟ"
+  --  entity.say("01000101") "ð«""ԑ(þ)Ӟ"
 
   -- entity.say doesnt work, may have to spawn a temp item like gardenplot that only does say then breaks
 end
@@ -282,3 +280,31 @@ function willFall(direction)
   end
   return true
 end
+--------------------------------------------------------------------------------
+-- lpk: copy entityproxy, as its small
+entityProxy = {}
+
+function entityProxy.create(entityId)
+  local wrappers = {}
+
+  local proxyMetatable = {
+    __index = function(t, functionName)
+      local wrapper = wrappers[functionName]
+      if wrapper == nil then
+        wrapper = function(...)
+          return world.callScriptedEntity(entityId, "entity." .. functionName, ...)
+        end
+        wrappers[functionName] = wrapper
+      end
+
+      return wrapper
+    end,
+
+    __newindex = function(t, key, val) end
+  }
+
+  local proxy = {}
+  setmetatable(proxy, proxyMetatable)
+  return proxy
+end
+

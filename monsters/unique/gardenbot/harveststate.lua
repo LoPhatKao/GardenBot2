@@ -35,7 +35,7 @@ end
 --------------------------------------------------------------------------------
 function harvestState.farmUpdate(dt, stateData)
   stateData.timer = stateData.timer - dt
-  if stateData.targetPosition == nil then
+  if stateData.targetPosition == nil or not world.entityExists(stateData.targetId) then
     return true
   end
   
@@ -103,10 +103,11 @@ util.debugLine(mcontroller.position(),vec2.add(mcontroller.position(),toTarget),
       mcontroller.controlFace(util.toDirection(toTarget[1]+1)) --lpk: +1 to face center of tree
       entity.setAnimationState("attack", "melee")
       stateData.timer = entity.randomizeParameterRange("gardenSettings.harvestTime")
-      local tileDmg = stateData.count --lpk: sliding damage - 0,1,2,3 .. etc
+      local tileDmg = stateData.count/2 --lpk: sliding damage - 0,1,2,3 .. etc
       stateData.count = stateData.count + 1
-      world.damageTiles({vec2.add(stateData.targetPosition,{0,1})}, "foreground", position, "plantish", tileDmg)
-      world.damageTiles({vec2.add(stateData.targetPosition,{0,-1})}, "foreground", position, "plantish", tileDmg)
+      local dmgtiles = {vec2.add(stateData.targetPosition,{0,1}),stateData.targetPosition,vec2.add(stateData.targetPosition,{0,-1})}
+--      world.damageTiles({stateData.targetPosition}, "foreground", position, "plantish", 2) -- original
+      world.damageTiles(dmgtiles, "foreground", position, "plantish", tileDmg)
       if entity.hasSound("work") then entity.playSound("work") end
     end  
   else
@@ -175,7 +176,7 @@ function harvestState.harvestFarmable(oId) -- rewritten by LoPhatKao june2015
     -- try pleased giraffe method
     if world.spawnTreasure and world.spawnTreasure(pos,hpname) then world.breakObject(oId, true) return end
     -- try lpk's workaround
-    if harvestPools.spawnTreasure and harvestPools.spawnTreasure(pos,hpname) then world.breakObject(oId, true) return end
+    if harvestPools.spawnTreasure and harvestPools.getPool(hpname) then world.breakObject(oId, harvestPools.spawnTreasure(pos,hpname) ) return end
 
     -- recreate vanilla harvestpools - cant find way to access them (in spirited)
     -- only works cause vanilla is pretty standardized

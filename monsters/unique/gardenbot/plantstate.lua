@@ -43,6 +43,7 @@ util.debugLine(mcontroller.position(),vec2.add(mcontroller.position(),toTarget),
         if world.placeObject(seed.name, stateData.targetPosition, 1, seed.parameters) then
           if oId == nil then self.inv.remove({name = seed.name, count = 1, parameters = seed.parameters}) end
           plantState.addToMemory(seed.name, stateData.targetPosition)
+        return true,entity.randomizeParameterRange("gardenSettings.plantTime")
         else
           local fp = stateData.targetPosition[1] .. "," .. stateData.targetPosition[2]
           if storage.failedMemory[fp] then
@@ -50,7 +51,6 @@ util.debugLine(mcontroller.position(),vec2.add(mcontroller.position(),toTarget),
           else storage.failedMemory[fp] = 1 end
           if oId ~= nil then self.inv.add(seed) end
         end
-        return true,entity.randomizeParameterRange("gardenSettings.plantTime")
       end
     end
   else
@@ -63,18 +63,20 @@ end
 --------------------------------------------------------------------------------
 
 function plantState.findPosition(position)
+--if true then return nil end
+  local seed = plantState.getSeedName()
+  if seed == nil then return nil end -- lpk: dont try if no seeds available
 
-  local direction = mcontroller.facingDirection()
   local basePosition = {
     math.floor(position[1] + 0.5),
     math.floor(position[2] + 0.5) - 1
   }
-  
+  local d = mcontroller.facingDirection()
   local dy = math.ceil(mcontroller.boundBox()[2]) -- 
 --  if string.find(self.searchType, 'lumber$') then dy = -2 end -- bleh :P
   
   for offset = 1, entity.configParameter("gardenSettings.plantDistance", 10), 1 do
-    for d = -1, 2, 2 do
+--    for d = -1, 2, 2 do
       local targetPosition = vec2.add({ offset * d, dy }, basePosition)
       --local modName = world.mod(vec2.add({0, -1}, targetPosition), "foreground")
       --if modName == nil or not string.find(modName, "tilled") then return nil end
@@ -85,7 +87,6 @@ function plantState.findPosition(position)
       local ps = targetPosition[1] .. "," .. targetPosition[2]
       local failedMemory = storage.failedMemory[ps]
       if not world.tileIsOccupied(targetPosition) and canReachTarget(targetPosition) and (failedMemory == nil or failedMemory < 3) then
-        local seed = plantState.getSeedName()
         if seed ~= nil then
           local sw,sh = plantState.plotSize(seed.name)
 		      local shCheck = plantState.saplingHeightCheck(sw,sh,targetPosition)--lpk: if its a tree, check more stuff
@@ -94,7 +95,7 @@ function plantState.findPosition(position)
           end
         end
       end
-    end
+ --   end
   end
   --TODO if seed is 2 plot, and fails, then try looking for a 1 plot seed and try again
   return nil
