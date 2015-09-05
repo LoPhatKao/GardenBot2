@@ -57,13 +57,15 @@ if inventoryManager == nil or inventoryManager.v == nil or inventoryManager.v < 
 
         if name ~= nil then
           for i,v in ipairs(inv) do
-            if type(v) == "table" and v.name == name and self.deepCompare(v.parameters, parameters) then
+            if type(v) == "table" and v.name == name 
+              and (((v.parameters == nil or next(v.parameters)==nil) 
+              and (parameters == nil or next(parameters)==nil))
+              or self.deepCompare(v.parameters, parameters)) then
               k = i
               break
-            end
+            end            
           end
         end
-
         return k
       end
       
@@ -162,7 +164,7 @@ if inventoryManager == nil or inventoryManager.v == nil or inventoryManager.v < 
       
       function self.emptyContainerSlots(container)
         if type(container) ~= "number" then return nil end
-        local size = world.containerSize(container)
+        local size = world.containerSize(container) or 0
         local count = 0
         for i = 0,size,1 do
           local item = world.containerItemAt(container, i)
@@ -204,8 +206,9 @@ if inventoryManager == nil or inventoryManager.v == nil or inventoryManager.v < 
           local inv = storage.inventoryManager
           local leftovers = {}
           while next(inv) ~= nil do
-            local item = table.remove(inv, 1)
-            --helper.log(item)
+            local item = table.remove(inv)--, 1)
+--            world.logInfo("%s",item)--helper.log(item)
+            if item == nil then break end
             item = world.containerAddItems(container, item)
             --helper.log(item)
             if item ~= nil then
@@ -243,7 +246,7 @@ if inventoryManager == nil or inventoryManager.v == nil or inventoryManager.v < 
       
       function self.matchInContainer(container, args)
         if type(container) ~= "number" then return false end
-        local size = world.containerSize(container)
+        local size = world.containerSize(container) or 0
         local index = 0
         local name = nil
         local ignore = {}

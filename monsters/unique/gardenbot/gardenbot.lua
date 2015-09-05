@@ -6,8 +6,11 @@ profilerApi = {}
 function isGardenbot() return true end
 --------------------------------------------------------------------------------
 function isPleasedGiraffe() 
-if world.spawnTreasure and world.objectSpaces then return true end 
-return false 
+if self.isPleasedGiraffe == nil then 
+if world.spawnTreasure and world.objectSpaces then self.isPleasedGiraffe = true 
+else self.isPleasedGiraffe = false end end
+
+return self.isPleasedGiraffe
 end
 --------------------------------------------------------------------------------
 function gardenbot.init(args)

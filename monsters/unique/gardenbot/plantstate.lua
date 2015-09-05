@@ -149,7 +149,7 @@ function plantState.addToMemory(name, pos)
     bounds = world.callScriptedEntity(seedIds[1], "entity.boundBox")
     plot = {(bounds[3] - bounds[1]) - 2,(bounds[4] - bounds[2]) - 2}
   end
-    world.logInfo("%s %s \n%s",name,plot,bounds)
+--    world.logInfo("%s %s \n%s",name,plot,bounds)
     storage.seedMemory[name] = plot
   end
 end

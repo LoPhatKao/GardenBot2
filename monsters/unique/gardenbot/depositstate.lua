@@ -38,7 +38,7 @@ util.debugLine(mcontroller.position(),vec2.add(mcontroller.position(),toTarget),
     if not stateData.located then
       stateData.located = true
       stateData.timer = entity.randomizeParameterRange("gardenSettings.depositTime")
-      world.containerOpen(stateData.targetId)
+      world.containerOpen(stateData.targetId) --world.logInfo("open")
     elseif stateData.timer < 0 then
       --TODO storage not working between game sessions for monsters
       --local seeds = self.inv.remove({group = "seeds", all = true})
@@ -46,9 +46,9 @@ util.debugLine(mcontroller.position(),vec2.add(mcontroller.position(),toTarget),
       --local result = world.callScriptedEntity(stateData.targetId, "add", items)
       --self.inv.add(seeds)
 --      chatNearbyPlayerOrBot()
-      world.containerClose(stateData.targetId)
-      self.inv.putInContainer(stateData.targetId)
---      return true,math.random(60,120) -- 60-120sec   
+      world.containerClose(stateData.targetId) --world.logInfo("close/depo start")
+      self.inv.putInContainer(stateData.targetId) --world.logInfo("depo end")
+      return true,math.random(60,120) -- 60-120sec   
     end
   else
     move({toTarget[1], toTarget[2]+1})

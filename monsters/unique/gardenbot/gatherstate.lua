@@ -21,6 +21,7 @@ function gatherState.update(dt, stateData)
     return true--,entity.configParameter("gardenSettings.cooldown", 15)
   end
   
+  stateData.targetPosition = world.entityPosition(stateData.targetId)
   local position = mcontroller.position()
   local toTarget = world.distance(stateData.targetPosition, position)
   local distance = world.magnitude(toTarget)
