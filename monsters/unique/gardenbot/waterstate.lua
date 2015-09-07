@@ -38,7 +38,9 @@ util.debugLine(mcontroller.position(),vec2.add(mcontroller.position(),toTarget),
       if stateData.till == nil then
           storage.waterMemory = world.mod(vec2.add({0, -1}, stateData.targetPosition), "foreground")
       else
-        local modPos = vec2.add({0.5, 1}, stateData.targetPosition)
+--        local modPos = vec2.add({0.5, math.random(1,3)/2}, stateData.targetPosition)
+        local yoff = waterState.sloped(stateData.targetPosition) and 1 or 0.75 
+        local modPos = vec2.add({0.5, yoff}, stateData.targetPosition)
         world.spawnProjectile("watersprinkledroplet", modPos, entity.id(), {0, -1}, false, {power = 0})
         if entity.hasSound("water") then entity.playSound("water") end
         storage.waterMemory = nil
@@ -51,6 +53,13 @@ util.debugLine(mcontroller.position(),vec2.add(mcontroller.position(),toTarget),
   end
 
   return stateData.timer < 0,entity.configParameter("gardenSettings.cooldown", 15)
+end
+--------------------------------------------------------------------------------
+function waterState.sloped(pos)
+return world.material({pos[1]+mcontroller.facingDirection(),pos[2]},"foreground") and 1
+--local ml = world.material({pos[1]-1,pos[2]},"foreground") if ml then return true end
+--local mr = world.material({pos[1]+1,pos[2]},"foreground") if mr then return true end
+--return false
 end
 --------------------------------------------------------------------------------
 function waterState.findPosition(position)

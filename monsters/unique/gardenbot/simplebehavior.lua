@@ -52,6 +52,7 @@ function simplegardenbot.main()
   self.sensors.clear()
   if self.debug then
     world.debugText("%s",self.inState,vec2.add(mcontroller.position(),{-3,1.5}),"white")
+    world.debugText("e%% %s",storage.efficiency*100,vec2.add(mcontroller.position(),{-3,0.5}),"white")
   end
 end
 --------------------------------------------------------------------------------

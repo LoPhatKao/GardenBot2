@@ -38,7 +38,7 @@ util.debugLine(mcontroller.position(),vec2.add(mcontroller.position(),toTarget),
       if r ~= nil then
         if r.name == "sapling" then gatherState.saplingHueShift(r) end
         self.inv.add({name = r.name, count = r.count, parameters = r.parameters})
-        if self.seedMemory and self.seedMemory[r.name] ~= nil then self.lastSeed = r.name end
+        if storage.seedMemory and storage.seedMemory[r.name] ~= nil then self.lastSeed = r.name end
         if entity.hasSound("gather") then entity.playSound("gather") end
       end
     end

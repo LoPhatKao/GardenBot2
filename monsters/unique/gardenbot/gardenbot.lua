@@ -24,6 +24,7 @@ function gardenbot.init(args)
   self.ignoreIds = {}
   storage.seedMemory = {}
   storage.failedMemory = {}
+  if storage.efficiency == nil then storage.efficiency = 0.75 end
   local harvest = entity.configParameter("gardenSettings.gatherables")
   if harvest ~= nil then
     self.harvest = {}

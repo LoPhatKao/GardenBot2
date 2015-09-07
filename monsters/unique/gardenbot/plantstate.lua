@@ -90,8 +90,9 @@ function plantState.findPosition(position)
       if not world.tileIsOccupied(targetPosition) and canReachTarget(targetPosition) and (failedMemory == nil or failedMemory < 3) then
         if seed ~= nil then
           local sw,sh = plantState.plotSize(seed.name)
-		      local shCheck = plantState.saplingHeightCheck(sw,sh,targetPosition)--lpk: if its a tree, check more stuff
-		      if shCheck and world.placeObject("gardenbotplot" .. sw, targetPosition) then
+		      if plantState.waterDepthCheck(seed,sh,targetPosition)
+            and plantState.saplingHeightCheck(sw,sh,targetPosition)--lpk: if its a tree, check more stuff
+            and world.placeObject("gardenbotplot" .. sw, targetPosition) then
             return { position = targetPosition, seed = seed.name}
           end
         end
@@ -100,6 +101,32 @@ function plantState.findPosition(position)
   end
   --TODO if seed is 2 plot, and fails, then try looking for a 1 plot seed and try again
   return nil
+end
+--------------------------------------------------------------------------------
+function plantState.waterDepthCheck(seed,y,pos)
+if not isPleasedGiraffe() then return true end -- only care if pleased gir +
+
+local sConfig = root.itemConfig(seed.name).config
+if sConfig == nil then return false end  --  world.logInfo("%s",sConfig)
+  if sConfig.minImmersion then
+    local minY = sConfig.minImmersion*y -- actual height on plant - cc = 3.6, rp = 2.7
+    local topMin = minY - math.floor(minY) -- the .6 or .7 or w/e
+    local topPos = vec2.add(pos,{0,math.floor(minY)})
+    local topLiq = world.liquidAt(topPos)
+    if (topLiq == nil or topMin > topLiq[2]) then 
+    util.debugRect({pos[1],pos[2],topPos[1]+1,topPos[2]+1},"magenta")
+    return false end
+  end
+  if sConfig.maxImmersion then
+    local maxY = sConfig.maxImmersion*y 
+    local maxPart = maxY - math.floor(maxY)
+    local maxPos = vec2.add(pos,{0,math.floor(maxY)})
+    local maxLiq = world.liquidAt(maxPos) 
+    if (maxLiq ~= nil and maxLiq[2] > maxPart) then     
+    util.debugRect({pos[1],pos[2],maxPos[1]+1,maxPos[2]+1},"magenta")
+    return false end
+  end
+return true
 end
 --------------------------------------------------------------------------------
 function plantState.saplingHeightCheck(x,y,pos)
@@ -128,7 +155,10 @@ function plantState.plotSize(name)
   if storage.seedMemory[name] ~= nil then 
     return storage.seedMemory[name][1], storage.seedMemory[name][2] 
   end
-  return 2,4
+  bounds = root.itemConfig(name).config.orientations[1].spaces -- same data as world.objectSpaces()
+  if bounds == nil then return 2,4 end
+  table.sort(bounds,plantState.objectSpaceSort)  --world.logInfo("%s",bounds)
+  return (bounds[#bounds][1] - bounds[1][1])+1,(bounds[#bounds][2] - bounds[1][2])+1
 end
 --------------------------------------------------------------------------------
 function plantState.objectSpaceSort(a,b)
@@ -158,13 +188,15 @@ function plantState.getSeedName(name)
   local position = mcontroller.position()
   local search = entity.configParameter("gardenSettings.seed", "seed")
   if name ~= nil then search = name end
+  if self.lastSeed == nil then self.lastSeed = search end
   local seed = nil
   seed = self.inv.findMatch(self.lastSeed, self.ignore)
   if seed == nil then seed = self.inv.findMatch(search, self.ignore) end
   if seed ~= nil then return seed,nil end
   
   if self.homeBin ~= nil and world.entityExists(self.homeBin) then --lpk: check homebin before randoms
-      seed = self.inv.matchInContainer(self.homeBin, {name = search, ignore = self.ignore})
+      seed = self.inv.matchInContainer(self.homeBin, {name = self.lastSeed, ignore = self.ignore})
+      if seed == nil then seed = self.inv.matchInContainer(self.homeBin, {name = search, ignore = self.ignore}) end
       if seed ~= nil then return seed,self.homeBin end  
   end
   
@@ -175,7 +207,8 @@ function plantState.getSeedName(name)
   local objectIds = world.objectQuery(min, max, { callScript = "entity.configParameter", callScriptArgs = {"category"}, callScriptResult = "storage" })
   for _,oId in ipairs(objectIds) do
     if canReachTarget(oId) then
-      seed = self.inv.matchInContainer(oId, {name = search, ignore = self.ignore})
+      seed = self.inv.matchInContainer(oId, {name = self.lastSeed, ignore = self.ignore})
+      if seed == nil then seed = self.inv.matchInContainer(oId, {name = search, ignore = self.ignore}) end
       if seed ~= nil then return seed,oId end
     end
   end

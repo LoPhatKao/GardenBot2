@@ -171,12 +171,20 @@ function harvestState.harvestFarmable(oId) -- rewritten by LoPhatKao june2015
   if world.farmableStage then stage = world.farmableStage(oId) end
   local interactions = world.callScriptedEntity(oId, "entity.configParameter", "stages",nil)
   if stage ~= nil and interactions ~= nil and interactions[stage+1].harvestPool ~= nil then
-if math.random() <0.8 and world.damageTiles({pos},"foreground",pos,"plantish",1,1) then return end
 
     local hpname = interactions[stage+1].harvestPool
     local stageReset = interactions[stage+1].resetToStage == nil
+    -- try to 'press E'
+    if math.random() <= storage.efficiency and world.damageTiles({pos},"foreground",pos,"plantish",1,1) then
+      storage.efficiency = math.min(1.0,storage.efficiency + 0.001)  --world.logInfo("%s",storage.efficiency)
+      return
+    else 
+      if not stageReset then storage.efficiency = math.max(0.25,storage.efficiency - 0.001) end 
+      world.breakObject(oId,false)  -- snip ;D
+      return
+    end
     -- try pleased giraffe method
-    if isPleasedGiraffe() then world.spawnTreasure(pos,hpname,entity.level()) world.breakObject(oId, stageReset) return end
+    if isPleasedGiraffe() then world.spawnTreasure(pos,hpname,entity.level()) world.breakObject(oId, false) return end
     -- try lpk's workaround
     if harvestPools.spawnTreasure and harvestPools.getPool(hpname) then 
     hpst=harvestPools.spawnTreasure(pos,hpname) 

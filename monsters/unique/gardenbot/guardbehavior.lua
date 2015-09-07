@@ -87,7 +87,7 @@ function move(direction)
   end
  
   mcontroller.controlMove(direction, run)
-  mcontroller.controlFace(direction)
+  if self.inState ~= "attackState" then mcontroller.controlFace(direction) end
   checkStuck()
   self.lastMoveDirection = util.toDirection(direction)
   if self.stuckCount > entity.configParameter("stuckCountMax",15) and self.inState ~= "returnState" then
@@ -233,12 +233,13 @@ world.debugPoint(targOffset,"green")
       attackState.setRangedAttackEnabled(true,self.projectileParams.skillName)
       attackState.setShieldEnabled(true)
       attackState.aimRanged(rangeTarget)
-      attackState.fireRanged(rangeTarget)
       
-      if stateData.burstCount >= self.projectileParams.shots then
+      if stateData.burstCount > self.projectileParams.shots then
         stateData.burstCount = 1
+        entity.setActiveSkillName(nil)
         self.attackHoldTimer = entity.configParameter("attackHoldTime",1)
       else
+        attackState.fireRanged(rangeTarget)
         stateData.burstCount = stateData.burstCount + 1
         self.attackHoldTimer = self.projectileParams.fireInterval
       end
@@ -249,6 +250,10 @@ world.debugPoint(targOffset,"green")
           status.addEphemeralEffect("staticshield", 0.25)
 --      end
       
+    elseif distance < entity.configParameter("minimalTargetRadius",5) and
+      distance > entity.configParameter("closeDistance",1.5)*2 and
+      attackState.clearLOS(weapOffset,targOffset) then -- back off
+      move(-toTarget[1])
     elseif distance <= entity.configParameter("closeDistance",1.5) then       --melee attack
       attackState.setAttackEnabled(true)
       attackState.setShieldEnabled(true)

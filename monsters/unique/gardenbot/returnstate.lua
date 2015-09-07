@@ -31,6 +31,7 @@ function returnState.enterWith(args)
 end
 --------------------------------------------------------------------------------
 function returnState.update(dt, stateData)
+  if mcontroller.liquidMovement() then dt = dt/2 end
   stateData.timer = stateData.timer - dt
   if stateData.targetPosition == nil then
     return true,entity.configParameter("gardenSettings.cooldown", 15)
