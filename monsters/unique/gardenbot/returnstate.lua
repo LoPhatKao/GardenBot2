@@ -49,6 +49,7 @@ util.debugLine(mcontroller.position(),vec2.add(mcontroller.position(),toTarget),
     if stateData.timer < 0 and (self.stuckCount > 0 or not canReachTarget(stateData.targetPosition)) then
       local p = stateData.targetPosition
       mcontroller.setPosition({p[1], p[2] + 0.5 + math.abs(mcontroller.boundBox()[2])})
+      status.addEphemeralEffect("beamin",0.25)
       mcontroller.setVelocity({0,-1 * world.gravity(mcontroller.position())})
       setAnimationState("movement", "idle")
     else

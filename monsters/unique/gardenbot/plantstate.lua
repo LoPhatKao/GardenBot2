@@ -44,6 +44,7 @@ util.debugLine(mcontroller.position(),vec2.add(mcontroller.position(),toTarget),
         if world.placeObject(seed.name, stateData.targetPosition, fd, seed.parameters) then
           if oId == nil then self.inv.remove({name = seed.name, count = 1, parameters = seed.parameters}) end
           plantState.addToMemory(seed.name, stateData.targetPosition)
+          self.lastSeed = nil
         return true--,entity.randomizeParameterRange("gardenSettings.plantTime")
         else
           local fp = stateData.targetPosition[1] .. "," .. stateData.targetPosition[2]
@@ -68,6 +69,7 @@ function plantState.findPosition(position)
   local seed = plantState.getSeedName()
   if seed == nil then return nil end -- lpk: dont try if no seeds available
 
+  local sw,sh = plantState.plotSize(seed.name)
   local basePosition = {
     math.floor(position[1] + 0.5),
     math.floor(position[2] + 0.5) - 1
@@ -87,15 +89,14 @@ function plantState.findPosition(position)
       --local objects = world.objectQuery(targetPosition, 0.5)
       local ps = targetPosition[1] .. "," .. targetPosition[2]
       local failedMemory = storage.failedMemory[ps]
-      if not world.tileIsOccupied(targetPosition) and canReachTarget(targetPosition) and (failedMemory == nil or failedMemory < 3) then
-        if seed ~= nil then
-          local sw,sh = plantState.plotSize(seed.name)
-		      if plantState.waterDepthCheck(seed,sh,targetPosition)
-            and plantState.saplingHeightCheck(sw,sh,targetPosition)--lpk: if its a tree, check more stuff
-            and world.placeObject("gardenbotplot" .. sw, targetPosition) then
-            return { position = targetPosition, seed = seed.name}
-          end
-        end
+      if not world.tileIsOccupied(targetPosition) -- nothing there
+        and (world.material(vec2.add({0, -1}, targetPosition), "foreground") and 1) -- has ground under
+        and canReachTarget(targetPosition) -- bot can get there
+        and (failedMemory == nil or failedMemory < 3) -- not ignoring that spot
+        and plantState.waterDepthCheck(seed,sh,targetPosition) -- right amount of water
+        and plantState.saplingHeightCheck(sw,sh,targetPosition)--lpk: if its a tree, check more stuff
+        and world.placeObject("gardenbotplot" .. sw, targetPosition) then -- test plot plants ok
+          return { position = targetPosition, seed = seed.name}
       end
  --   end
   end
@@ -133,32 +134,38 @@ function plantState.saplingHeightCheck(x,y,pos)
   if x == "S" then x = 3 end -- x is S, so is a tree
   if pos[1] % x ~= 0 then return false end -- is not aligned properly
   
-  local targPos = {pos[1],pos[2]+y-1}
-  local blocksInLos
-  if isPleasedGiraffe() then
-   blocksInLos = world.collisionBlocksAlongLine(pos, targPos, {"Null","Block","Dynamic","Platform"})
-  else
-   blocksInLos = world.collisionBlocksAlongLine(pos, targPos, "Any")
-  end
+  local collisionType
+  if not isPleasedGiraffe() then collisionType = "Any"  
+  else collisionType = {"Null","Block","Dynamic","Platform"} end
   
+  local targRect = {pos[1],pos[2],pos[1]+math.ceil(0.66*x),pos[2]+y-1}
+  local blocksInLos = world.rectTileCollision(targRect,collisionType)
+  
+  if blocksInLos then util.debugRect(targRect,"red")
+  else util.debugRect(targRect,"yellow") end
+  return not blocksInLos
+--[[
+  local targPos = {pos[1],pos[2]+y-1}
+  local blocksInLos = world.collisionBlocksAlongLine({pos[1]+(x/2),pos[2]}, {targPos[1]+(x/2),targPos[2]}, collisionType)
 if self.debug and #blocksInLos > 0 then 
 local bl,tr = blocksInLos[1], vec2.add(blocksInLos[#blocksInLos],{1,1})
 util.debugRect({bl[1],bl[2],tr[1],tr[2]},"red")-- lbrt
 elseif self.debug then
-util.debugRect({pos[1],pos[2],targPos[1]+1,targPos[2]+1},"yellow")
+util.debugRect({pos[1],pos[2],targPos[1]+x,targPos[2]+1},"yellow")
 end
   return #blocksInLos == 0
+--]]
 end
 --------------------------------------------------------------------------------
 function plantState.plotSize(name)
-  if string.find(name, "sapling") then return "S",20 end
+  if string.find(name, "sapling") then return "S",30 end
   if storage.seedMemory[name] ~= nil then 
     return storage.seedMemory[name][1], storage.seedMemory[name][2] 
   end
   bounds = root.itemConfig(name).config.orientations[1].spaces -- same data as world.objectSpaces()
   if bounds == nil then return 2,4 end
   table.sort(bounds,plantState.objectSpaceSort)  --world.logInfo("%s",bounds)
-  return (bounds[#bounds][1] - bounds[1][1])+1,(bounds[#bounds][2] - bounds[1][2])+1
+  return math.floor(bounds[#bounds][1] - bounds[1][1])+1,(bounds[#bounds][2] - bounds[1][2])+1
 end
 --------------------------------------------------------------------------------
 function plantState.objectSpaceSort(a,b)
@@ -174,7 +181,7 @@ function plantState.addToMemory(name, pos)
   if isPleasedGiraffe() then
 --  world.logInfo("%s - %s",world.entityName(seedIds[1]),world.objectSpaces(seedIds[1]))
     bounds = world.objectSpaces(seedIds[1]) table.sort(bounds,plantState.objectSpaceSort)
-    plot = {(bounds[#bounds][1] - bounds[1][1])+1,(bounds[#bounds][2] - bounds[1][2])+1}
+    plot = {math.floor(bounds[#bounds][1] - bounds[1][1])+1,(bounds[#bounds][2] - bounds[1][2])+1}
   else
     bounds = world.callScriptedEntity(seedIds[1], "entity.boundBox")
     plot = {(bounds[3] - bounds[1]) - 2,(bounds[4] - bounds[2]) - 2}

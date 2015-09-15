@@ -26,6 +26,7 @@ function harvestState.enter()
 end
 --------------------------------------------------------------------------------
 function harvestState.update(dt, stateData)
+  if mcontroller.liquidMovement() then dt = dt/2 end
   if stateData.type == "farm" then 
     return harvestState.farmUpdate(dt, stateData)
   elseif stateData.type == "lumber" then
@@ -52,6 +53,7 @@ function harvestState.farmUpdate(dt, stateData)
     elseif stateData.timer < 0 then
       if entity.hasSound("work") then entity.playSound("work") end
       harvestState.harvestFarmable(stateData.targetId)
+      return true, entity.randomizeParameterRange("gardenSettings.harvestTime")
     end
   else
     move(toTarget)
@@ -65,7 +67,7 @@ function harvestState.findFarmPosition(position)
   local objectIds = {}
   if string.find(self.searchType, '^linear') then
     local p1 = vec2.add({-self.searchDistance, 0}, position)
-    local p2 = vec2.add({self.searchDistance, 0}, position)
+    local p2 = vec2.add({self.searchDistance, 1}, position)
     objectIds = world.objectLineQuery(p1, p2, { callScript = "entity.configParameter", callScriptArgs = {"category"}, callScriptResult = "farmable",order = "nearest" })
   elseif string.find(self.searchType, '^radial') then
     objectIds = world.objectQuery(position, self.searchDistance, { callScript = "entity.configParameter", callScriptArgs = {"category"}, callScriptResult = "farmable",order = "nearest" })
@@ -126,7 +128,7 @@ function harvestState.findLumberPosition(position)
   local objectIds = {}
   if string.find(self.searchType, '^linear') then
     local p1 = vec2.add({-self.searchDistance, 0}, position)
-    local p2 = vec2.add({self.searchDistance, 0}, position)
+    local p2 = vec2.add({self.searchDistance, 1}, position)
     objectIds = world.entityLineQuery(p1, p2, {notAnObject = true,order = "nearest"})
   elseif string.find(self.searchType, '^radial') then
     objectIds = world.entityQuery(position, self.searchDistance, {notAnObject = true,order = "nearest"})
@@ -165,6 +167,7 @@ end
 
 function harvestState.harvestFarmable(oId) -- rewritten by LoPhatKao june2015
 --	world.logInfo("trying to harvest")
+  if not world.entityExists(oId) then return end
   local forceSeed = true
   local pos = world.entityPosition(oId)
   local stage = nil
@@ -183,6 +186,7 @@ function harvestState.harvestFarmable(oId) -- rewritten by LoPhatKao june2015
       world.breakObject(oId,false)  -- snip ;D
       return
     end
+    -- technically orphan code from here down - will never get called
     -- try pleased giraffe method
     if isPleasedGiraffe() then world.spawnTreasure(pos,hpname,entity.level()) world.breakObject(oId, false) return end
     -- try lpk's workaround
@@ -219,9 +223,9 @@ function harvestState.harvestFarmable(oId) -- rewritten by LoPhatKao june2015
       end
     
     end
+  world.breakObject(oId,not forceSeed) -- break plant, false force drops 1 seed
   end
 	
-  world.breakObject(oId,not forceSeed) -- break plant, false force drops 1 seed
 end
 
 --[[  --lpk: old func, drops used to be in the *seed.object itself

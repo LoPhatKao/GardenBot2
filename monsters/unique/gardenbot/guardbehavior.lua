@@ -81,7 +81,7 @@ function move(direction)
   if self.csmTimer <= 0 then
 	  local csm = calculateSeparationMovement()
 	  if csm == -(util.toDirection(direction)) then direction = csm * math.abs(direction) end
-	  self.csmTimer = self.dt * 3
+	  self.csmTimer = 1
   else
     self.csmTimer = self.csmTimer - self.dt  
   end

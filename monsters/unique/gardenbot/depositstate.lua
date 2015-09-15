@@ -66,7 +66,7 @@ function depositState.findTargetPosition(position)
   local objectIds = {}
   if string.find(self.searchType, '^linear') then
     local p1 = vec2.add({-self.searchDistance, 0}, position)
-    local p2 = vec2.add({self.searchDistance, 0}, position)
+    local p2 = vec2.add({self.searchDistance, 1}, position)
     objectIds = world.objectLineQuery(p1, p2, { callScript = "entity.configParameter", callScriptArgs = {"category"}, callScriptResult = "storage",order = "nearest"})
   elseif string.find(self.searchType, '^radial') then
     objectIds = world.objectQuery(position, self.searchDistance, { callScript = "entity.configParameter", callScriptArgs = {"category"}, callScriptResult = "storage",order = "nearest" })

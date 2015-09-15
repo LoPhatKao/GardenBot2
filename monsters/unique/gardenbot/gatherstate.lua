@@ -12,7 +12,7 @@ function gatherState.enter()
       located = false
     }
   end
-  return nil,1
+  return nil,2
 end
 --------------------------------------------------------------------------------
 function gatherState.update(dt, stateData)
@@ -40,6 +40,7 @@ util.debugLine(mcontroller.position(),vec2.add(mcontroller.position(),toTarget),
         self.inv.add({name = r.name, count = r.count, parameters = r.parameters})
         if storage.seedMemory and storage.seedMemory[r.name] ~= nil then self.lastSeed = r.name end
         if entity.hasSound("gather") then entity.playSound("gather") end
+        return true
       end
     end
   else
@@ -47,7 +48,7 @@ util.debugLine(mcontroller.position(),vec2.add(mcontroller.position(),toTarget),
     move({toTarget[1], toTarget[2] + dy})
   end
 
-  return stateData.timer < 0
+  return stateData.timer < 0, 2
 end
 --------------------------------------------------------------------------------
 function gatherState.saplingHueShift(it)
@@ -64,8 +65,9 @@ function gatherState.findTargetPosition(position)
   local objectIds = {}
   if string.find(self.searchType, '^linear') then
     position[2] = position[2]+math.ceil(mcontroller.boundBox()[2]) -- lpk: adjust base position
-    local p1 = vec2.add({-self.searchDistance, 0}, position)
+    local p1 = vec2.add({-self.searchDistance, -1}, position)
     local p2 = vec2.add({self.searchDistance, 0}, position)
+--    util.debugRect({p1[1],p1[2],p2[1],p2[2]},"magenta")
     objectIds = world.itemDropQuery(p1, p2,{order = "nearest"})
   elseif string.find(self.searchType, '^radial') then
     objectIds = world.itemDropQuery(position, self.searchDistance,{order = "nearest"})
