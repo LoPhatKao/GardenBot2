@@ -64,13 +64,14 @@ function depositState.findTargetPosition(position)
     return { targetId = self.homeBin, targetPosition = oPosition }
   end
   local objectIds = {}
-  if string.find(self.searchType, '^linear') then
-    local p1 = vec2.add({-self.searchDistance, 0}, position)
-    local p2 = vec2.add({self.searchDistance, 1}, position)
-    objectIds = world.objectLineQuery(p1, p2, { callScript = "entity.configParameter", callScriptArgs = {"category"}, callScriptResult = "storage",order = "nearest"})
-  elseif string.find(self.searchType, '^radial') then
-    objectIds = world.objectQuery(position, self.searchDistance, { callScript = "entity.configParameter", callScriptArgs = {"category"}, callScriptResult = "storage",order = "nearest" })
-  end
+--  if string.find(self.searchType, '^linear') then
+    local dy = entity.configParameter("gardenSettings.fovHeight",2)
+    local p1 = vec2.add({-self.searchDistance, -dy/2}, position)
+    local p2 = vec2.add({self.searchDistance, dy}, position)
+    objectIds = world.objectQuery(p1, p2, { callScript = "entity.configParameter", callScriptArgs = {"category"}, callScriptResult = "storage",order = "nearest"})
+--  elseif string.find(self.searchType, '^radial') then
+--    objectIds = world.objectQuery(position, self.searchDistance, { callScript = "entity.configParameter", callScriptArgs = {"category"}, callScriptResult = "storage",order = "nearest" })
+--  end
 --  if entity.configParameter("gardenSettings.efficiency") then
 --    table.sort(objectIds, distanceSort)
 --  end

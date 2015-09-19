@@ -53,7 +53,8 @@ function harvestState.farmUpdate(dt, stateData)
     elseif stateData.timer < 0 then
       if entity.hasSound("work") then entity.playSound("work") end
       harvestState.harvestFarmable(stateData.targetId)
-      return true, entity.randomizeParameterRange("gardenSettings.harvestTime")
+      return true, entity.configParameter("gardenSettings.cooldown", 15)/2
+      --entity.randomizeParameterRange("gardenSettings.harvestTime")
     end
   else
     move(toTarget)
@@ -68,7 +69,7 @@ function harvestState.findFarmPosition(position)
   if string.find(self.searchType, '^linear') then
     local p1 = vec2.add({-self.searchDistance, 0}, position)
     local p2 = vec2.add({self.searchDistance, 1}, position)
-    objectIds = world.objectLineQuery(p1, p2, { callScript = "entity.configParameter", callScriptArgs = {"category"}, callScriptResult = "farmable",order = "nearest" })
+    objectIds = world.objectQuery(p1, p2, { callScript = "entity.configParameter", callScriptArgs = {"category"}, callScriptResult = "farmable",order = "nearest" })
   elseif string.find(self.searchType, '^radial') then
     objectIds = world.objectQuery(position, self.searchDistance, { callScript = "entity.configParameter", callScriptArgs = {"category"}, callScriptResult = "farmable",order = "nearest" })
   end
@@ -129,7 +130,7 @@ function harvestState.findLumberPosition(position)
   if string.find(self.searchType, '^linear') then
     local p1 = vec2.add({-self.searchDistance, 0}, position)
     local p2 = vec2.add({self.searchDistance, 1}, position)
-    objectIds = world.entityLineQuery(p1, p2, {notAnObject = true,order = "nearest"})
+    objectIds = world.entityQuery(p1, p2, {notAnObject = true,order = "nearest"})
   elseif string.find(self.searchType, '^radial') then
     objectIds = world.entityQuery(position, self.searchDistance, {notAnObject = true,order = "nearest"})
   end
