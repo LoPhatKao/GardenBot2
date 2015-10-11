@@ -54,7 +54,7 @@ util.debugLine(mcontroller.position(),vec2.add(mcontroller.position(),toTarget),
     move({toTarget[1], toTarget[2]+1})
   end
 
-  return stateData.timer < 0,entity.configParameter("gardenSettings.cooldown", 15)*2 -- lpk:ignore deposit for a while
+  return stateData.timer < 0--,entity.configParameter("gardenSettings.cooldown", 15)*2 -- lpk:ignore deposit for a while
 
 end
 --------------------------------------------------------------------------------

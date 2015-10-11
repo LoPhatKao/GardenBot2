@@ -1,0 +1,55 @@
+{
+  "objectName" : "miniskip",
+  "tags" : ["human","lunarbase","storage","mining"],
+  "rarity" : "Common",
+  "objectType" : "container",
+  "category" : "storage",
+  "price" : 150,
+  "description" : "A small metal Skip full of ores and rubble.",
+  "shortdescription" : "Mini Mining Skip",
+  "race" : "human",
+/*
+  "apexDescription" : "A big painted Skip, full of rubble and dirt.",
+  "avianDescription" : "An ugly metal container, full of rubble and painted red.",
+  "floranDescription" : "Floran wants to sssleep in red box.",
+  "glitchDescription" : "Observant. The container appears to hold unwanted rubble.",
+  "humanDescription" : "A big Skip, full of rubble and dirt.",
+  "hylotlDescription" : "An ugly metal container, full of wasted material.",
+*/
+  "inventoryIcon" : "miniskipicon.png",
+  "orientations" : [
+    {
+      "image" : "miniskip.png:<color>",
+
+      "imagePosition" : [-12, 0],
+      "frames" : 1,
+      "animationCycle" : 0.5,
+      
+      "direction" : "left",
+      "flipImages" : true,
+
+      "spaces" : [  [-1, 0], [0, 0], [-1, 1], [0, 1], [-1, 2], [0, 2] ],
+      "anchors" : [ "bottom" ]
+    },
+    {
+      "image" : "miniskip.png:<color>",
+
+      "imagePosition" : [-12, 0],
+      "frames" : 1,
+      "animationCycle" : 0.5,
+      
+      "direction" : "right",
+
+      "spaces" : [  [-1, 0], [0, 0], [-1, 1], [0, 1], [-1, 2], [0, 2] ],
+      "anchors" : [ "bottom" ]
+    }
+  ],
+
+  "openSounds" : [ "/sfx/objects/metalbox_open.wav" ],
+  "closeSounds" : [ "/sfx/objects/metalbox_close.wav" ],
+  "slotCount" : 16,
+  "uiConfig" : "/interface/chests/chest%slots%.config",
+  "frameCooldown" : 5,
+  "autoCloseCooldown" : 3600
+
+}

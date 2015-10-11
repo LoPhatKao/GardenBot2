@@ -1,0 +1,9 @@
+{
+  "name" : "body",
+  "category" : "gardenbotv49r",
+  "type" : "body",
+
+  "frames" : {
+    "body" : "v49r.png"
+  }
+}

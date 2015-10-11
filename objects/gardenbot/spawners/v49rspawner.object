@@ -1,0 +1,40 @@
+{
+  "objectName" : "gardenbotv49rspawner",
+  "rarity" : "Common",
+  "description" : "In a cavern, in a canyon,\nExcavating for a mine,\nDwelt a miner, 49-R",
+  "shortdescription" : "Mining Bot v49r",
+  "race" : "generic",
+  "category" : "decorative",
+  "price" : 750,
+  "printable" : false,
+
+  "apexDescription" : "A deactivated garden bot.",
+  "avianDescription" : "A deactivated garden bot.",
+  "floranDescription" : "A deactivated garden bot.",
+  "glitchDescription" : "A deactivated garden bot.",
+  "humanDescription" : "A deactivated garden bot.",
+  "hylotlDescription" : "A deactivated garden bot.",
+
+  "inventoryIcon" : "v49rspawnericon.png",
+  "orientations" : [
+    {
+      "dualImage" : "v49rspawner.png:<color>",
+
+      "imagePosition" : [-8, -8],
+      "frames" : 1,
+      "animationCycle" : 1.0,
+
+      "spaces" : [ [0, -1], [-1, -1], [0, 0], [-1, 0], [0, 1], [-1, 1], [0, 2], [-1, 2] ],
+      "anchors" : [ "bottom" ]
+    }
+  ],
+  
+  "botspawner" : {
+      "type" : "gardenbotv49r"
+  },
+  
+  "scripts" : [ 
+    "/objects/gardenbot/botspawner.lua"
+  ],
+  "scriptDelta" : 5
+}

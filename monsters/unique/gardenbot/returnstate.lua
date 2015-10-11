@@ -7,13 +7,14 @@ returnState = {}
 
 
 function returnState.enterWith(args)
-    if self.spawnPoint == nil then self.spawnPoint = entity.configParameter("spawnPoint") end
+if type(args) ~= "table" or args.ignoreDistance == nil then return nil end
     if self.homeBin ~= nil or self.spawnPoint ~= nil then
       local position = mcontroller.position()
       local range = entity.configParameter("gardenSettings.wanderRange") or 60
       local hPos = nil
       if self.homeBin ~= nil and world.entityExists(self.homeBin) then
-        hPos = world.entityPosition(self.homeBin)
+        hPos = world.entityPosition(self.homeBin) 
+        hPos[2] = hPos[2] - mcontroller.boundBox()[2] -- adjust for height
       else
         hPos = self.spawnPoint
       end
@@ -46,9 +47,9 @@ util.debugLine(mcontroller.position(),vec2.add(mcontroller.position(),toTarget),
     self.ignoreIds = {}
     setAnimationState("movement", "idle")
   else
-    if stateData.timer < 0 and (self.stuckCount > 0 or not canReachTarget(stateData.targetPosition)) then
+    if self.stuckCount > 50 or (stateData.timer < 0 and not canReachTarget(stateData.targetPosition)) then
       local p = stateData.targetPosition
-      mcontroller.setPosition({p[1], p[2] + 0.5 + math.abs(mcontroller.boundBox()[2])})
+      mcontroller.setPosition({p[1], p[2]})-- + 0.5 + math.abs(mcontroller.boundBox()[2])})
       status.addEphemeralEffect("beamin",0.25)
       mcontroller.setVelocity({0,-1 * world.gravity(mcontroller.position())})
       setAnimationState("movement", "idle")

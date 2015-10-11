@@ -24,6 +24,7 @@ function gardenbot.init(args)
   self.ignoreIds = {}
   storage.seedMemory = {}
   storage.failedMemory = {}
+  if storage.uuid == nil then storage.uuid = entity.configParameter("selfUuid",sb.makeUuid()) end
   if storage.efficiency == nil then storage.efficiency = 0.75 end
   local harvest = entity.configParameter("gardenSettings.gatherables")
   if harvest ~= nil then
@@ -43,6 +44,7 @@ function gardenbot.init(args)
   self.searchType = entity.configParameter("gardenSettings.searchType")
   self.searchDistance = entity.configParameter("gardenSettings.searchDistance")
   
+  self.spawnPoint = entity.configParameter("spawnPoint") or mcontroller.position()
   self.lastMoveDirection = util.randomDirection()
   self.shielded = false
   

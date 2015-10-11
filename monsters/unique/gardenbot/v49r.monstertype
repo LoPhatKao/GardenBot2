@@ -1,0 +1,140 @@
+{
+  "type" : "gardenbotv49r",
+
+  "categories" : [ "gardenbotv49r" ],
+  "parts" : [ "body" ],
+
+  "animation" : "v49r.animation",
+
+  "colors" : "/monsters/colors.config",
+  "dropPools" : [ ],
+  "persistent" : true,
+
+  "baseParameters" : {
+    "scripts" : [
+      "/scripts/delegate.lua",
+      "/monsters/unique/gardenbot/gardenbot.lua",
+      "/monsters/unique/gardenbot/minerbehavior.lua",
+      "/monsters/unique/gardenbot/miningbehavior.lua",
+      "/scripts/sensors.lua",
+      "/scripts/stateMachine.lua",
+      "/scripts/util.lua",
+      "/scripts/vec2.lua",
+      "/scripts/inventoryManager.lua",
+      
+      "/monsters/unique/gardenbot/gatherState.lua",
+      "/monsters/unique/gardenbot/depositState.lua",
+      "/monsters/unique/gardenbot/mineState.lua",
+      "/monsters/unique/gardenbot/returnState.lua",
+      "/monsters/unique/gardenbot/idleState.lua"
+    ],
+
+    "scriptDelta" : 6,
+    "gardenSettings" : {
+      "interactRange" : 3.5,
+      "searchDistance" : 25.0,
+      "plantDistance" : 8.0,
+      "cooldown" : 15.0,
+      "locateTime" : [2.0, 3.0],
+      "harvestTime" : [1.0, 1.8],
+      "plantTime" : [1.0, 1.8],
+      "depositTime" : [0.5, 1.0],
+      "searchType" : "radialminer",
+      "fovHeight" : 4,
+      "seed" : [ "seed" ],
+      "gatherables" : [ 
+        {"seed" : "match", "consumable" : "type", "plant" : "match", "ore" : "match"}, "money"
+      ]
+    },
+
+    "damageTeam" : 1,
+
+    "metaBoundBox" : [-1.0, -2.0, 1.0, 2.0],
+    "scale" : 1.0,
+
+    "movementSettings" : {
+      "collisionPoly" : [ [-1.0, -2.0], [1.0, -2.0], [1.0, 2.0], [-1.0, 2.0] ],
+
+      "mass" : 0.2,
+      "walkSpeed" : 7,
+      "runSpeed" : 10,
+      "jumpSpeed" : 5,
+      "flySpeed" : 15,
+      "airFriction" : 0.25,
+      "airForce" : 50.0
+    },
+
+    "knockoutTime" : 0.1,
+    "knockoutEffect" : "blink",
+    "deathParticles" : "deathPoof",
+
+    "touchDamage" : {
+      "poly" : [ [-1.0, -2.0], [1.0, -2.0], [1.0, 2.0], [-1.0, 2.0] ],
+      "damage" : 12,
+
+      "teamType" : "enemy",
+      "damageSourceKind" : "electroshock",
+      "statusEffects" : [ ]
+    },
+
+    "statusSettings" : {
+      "statusProperties" : {
+        "targetMaterialKind" : "robotic"
+      },
+
+      "appliesEnvironmentStatusEffects" : false,
+      "minimumLiquidStatusEffectPercentage" : 0.1,
+
+      "primaryScriptSources" : [
+        "/stats/monster_primary.lua"
+      ],
+      "primaryScriptDelta" : 0,
+
+      "stats" : {
+        "maxHealth" : {
+          "baseValue" : 48
+        },
+        "protection" : {
+          "baseValue" : 1.0
+        },
+        "healthRegen" : {
+          "baseValue" : 0.0
+        },
+        "poisonImmunity" : {
+          "baseValue" : 1.0
+        }
+      },
+
+      "resources" : {
+        "health" : {
+          "maxStat" : "maxHealth",
+          "deltaStat" : "healthRegen",
+          "defaultPercentage" : 100
+        }
+      }
+    },
+
+    "mouthOffset" : [0, 0],
+    "feetOffset" : [0, -8],
+
+    "collisionSensors" : [ [1.25, 0.0] ],
+
+    "nearGroundSensor" : [ [0.0, -2.25] ],
+    "midGroundSensor" : [ [0.0, -5.0] ],
+
+    "idleTimeRange" : [1.0, 3.0],
+    "moveTimeRange" : [2.5, 5.0],
+
+    "repairResponseMaxDistance" : 20.0,
+    "repairDistance" : 3.0,
+    "repairHealthPerSecond" : 10.0,
+
+    "attackTargetHoldTime" : 5.0,
+    "attackRange" : [1.0, 5.0],
+
+    "projectileOffset" : [0.25, -0.375],
+    "jumpTargetDistance" : 4,
+    "jumpTime" : [0.4, 0.7]
+
+  }
+}
