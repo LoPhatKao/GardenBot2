@@ -177,84 +177,16 @@ function harvestState.harvestFarmable(oId) -- rewritten by LoPhatKao june2015
   if stage ~= nil and interactions ~= nil and interactions[stage+1].harvestPool ~= nil then
 
     local hpname = interactions[stage+1].harvestPool
-    local stageReset = interactions[stage+1].resetToStage == nil
+    local stageReset = interactions[stage+1].resetToStage ~= nil
     -- try to 'press E'
     if math.random() <= storage.efficiency and world.damageTiles({pos},"foreground",pos,"plantish",1,1) then
       storage.efficiency = math.min(1.0,storage.efficiency + 0.001)  --world.logInfo("%s",storage.efficiency)
       return
     else 
-      if not stageReset then storage.efficiency = math.max(0.25,storage.efficiency - 0.001) end 
+      if stageReset then storage.efficiency = math.max(0.25,storage.efficiency - 0.001) end 
       world.breakObject(oId,false)  -- snip ;D
       return
     end
-    -- technically orphan code from here down - will never get called
-    -- try pleased giraffe method
-    if isPleasedGiraffe() then world.spawnTreasure(pos,hpname,entity.level()) world.breakObject(oId, false) return end
-    -- try lpk's workaround
-    if harvestPools.spawnTreasure and harvestPools.getPool(hpname) then 
-    hpst=harvestPools.spawnTreasure(pos,hpname) 
-    world.breakObject(oId, hpst and stageReset) return end
-
-    -- recreate vanilla harvestpools - cant find way to access them (in spirited)
-    -- only works cause vanilla is pretty standardized
-    -- check item is valid before trying to spawn - total unknowns will only drop plantfibre then seed on break
-    local pname = string.sub(hpname,0,string.find(hpname,"Harvest")-1)
-    local numRnd = 1
-    if percentile() <= 0.3 then numRnd = 3 else numRnd = 2 end
-    for i = 1,numRnd do
-      if percentile() < 0.6 then -- farmable 
-        local oname = pname
-        -- special cases coffee->coffeebeans + sugarcane->sugar
-        if pname == "coffee" then oname = "coffeebeans" end
-        if pname == "sugarcane" then oname = "sugar" end
-        
-        if string.len(world.itemType(oname)) > 0 then -- itemtype returns "" for invalid, len sees "" as 0 
-          world.spawnItem(oname,{pos[1], pos[2] + 0.5},1)
-          if self.harvest[string.lower(oname)] == nil then self.harvest[string.lower(oname)] = true end
-        end
-      end
-      if percentile() < 0.2 then -- seed
-        if string.len(world.itemType(pname.."seed")) > 0 then
-          world.spawnItem(pname.."seed",{pos[1], pos[2] + 0.5},1)
-          forceSeed = false
-        end
-      end
-      if percentile() < 0.2 then -- plantfibre
-        world.spawnItem("plantfibre",{pos[1], pos[2] + 0.5},1)
-      end
-    
-    end
-  world.breakObject(oId,not forceSeed) -- break plant, false force drops 1 seed
   end
-	
+	--rc14 remove legacy code
 end
-
---[[  --lpk: old func, drops used to be in the *seed.object itself
-function harvestState.harvestFarmable(oId)
-  local stage = "2"
-  if world.farmableStage then stage = world.farmableStage(oId) end
-  local drops = world.callScriptedEntity(oId, "entity.configParameter", "interactionTransition." .. tostring(stage) .. ".dropOptions", nil)
-  --world.callScriptedEntity(oId, "entity.randomizeParameter", "interactionTransition." .. stage .. ".dropOptions")
-    if drops then
-      local pos = world.entityPosition(oId)
-      local i = 2
-      local odds = drops[1]
-      while drops[i] do
-        if drops[i+1] == nil or math.random() < odds then
-          local j = 1
-          while drops[i][j] do
-            local name = drops[i][j].name
-            if self.harvest[string.lower(name)] == nil and world.itemType(name) == "generic" then
-              self.harvest[string.lower(name)] = true
-            end
-            world.spawnItem(name, {pos[1], pos[2] + 1}, drops[i][j].count)
-            j = j + 1
-          end
-          break
-        end
-        i = i + 1
-      end
-    end
-    world.callScriptedEntity(oId, "entity.break")
-end
---]]

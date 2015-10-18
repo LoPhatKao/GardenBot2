@@ -52,7 +52,11 @@ util.debugLine(mcontroller.position(),vec2.add(mcontroller.position(),toTarget),
     end
   else
     move({toTarget[1], toTarget[2]+1})
+    if stateData.timer < 0 and not canReachTarget(stateData.targetId)then
+      self.state.pickState({ignoreDistance=true}) -- blocked above or below, tp home
+    end
   end
+  
 
   return stateData.timer < 0--,entity.configParameter("gardenSettings.cooldown", 15)*2 -- lpk:ignore deposit for a while
 

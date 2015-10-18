@@ -1,3 +1,4 @@
+if delegate == nil then
 --------------------------------------------------------------------------------
 delegate = {
     v = 4,
@@ -15,13 +16,13 @@ function init(args)
     if not result then delegate.triggerAll("postInit", args) end
 end
 --------------------------------------------------------------------------------
-delegate.main = main
-function main()
-    local result = delegate.triggerAll("preMain")
-    if not result then result = delegate.triggerAll("main") end
-    if not result and delegate.main ~= nil then result = delegate.main() end
+delegate.update = update
+function update()
+    local result = delegate.triggerAll("preUpdate")
+    if not result then result = delegate.triggerAll("update") end
+    if not result and delegate.update ~= nil then result = delegate.update() end
     if delegate.tick ~= nil then delegate.tick() end
-    if not result then result = delegate.triggerAll("postMain") end
+    if not result then result = delegate.triggerAll("postUpdate") end
 end
 --------------------------------------------------------------------------------
 delegate.die = die
@@ -102,3 +103,4 @@ function delegate.delayTick()
     delegate.ticking = false
 end
 --------------------------------------------------------------------------------
+end

@@ -47,9 +47,14 @@ function moveTo(targpos,vertical) -- move to a pos, digging if needed - return t
   mcontroller.controlFace(facedir)
   
   if vertical then
+  local vdir = util.toDirection(toTarget[2])
     local onplats = isOnPlatform()
     local yoff = 1 
+    local vyoff = mcontroller.boundBox()[4]-mcontroller.boundBox()[2] -- height
     local p1,p2 = {self.shaftX-2,footPosition[2]-yoff},{self.shaftX+1,footPosition[2]-yoff}
+    if vdir > 0 then -- going up
+      p1[2] = math.ceil(p1[2]+vyoff+1) p2[2] = math.ceil(p2[2]+vyoff+0.5) 
+    end
     util.debugRect({p1[1],p1[2],p2[1]+1,p2[2]+1},"blue")
     if facedir > 0 then -- rtl instead
       p1,p2 = p2,p1
@@ -72,7 +77,7 @@ function moveTo(targpos,vertical) -- move to a pos, digging if needed - return t
     local dy = entity.configParameter("gardenSettings.fovHeight") - 1
     local yoff = 0
     local tb = branchState.posToBranch(targpos)
-    if not branchState.isAtBranchY(tb) and self.inState ~= "branchState" then 
+    if not branchState.isAtBranchY(tb) and (self.inState ~= "branchState" or branchState.posToBranch(footPosition)<0) then 
       local tbY = branchState.branchToPos(tb)[2]
       if tbY > footPosition[2]-1 then -- dig up
       yoff = 1 
@@ -112,10 +117,12 @@ if dmg == nil then dmg = 1 end
 if hrv == nil then hrv = 0 end
   local dmgtiles = false
   local matname = world.material(block,"foreground")
-  if matname == mineParams.platName or matname == mineParams.wallName then return false end
+  if matname == mineParams.platName 
+    or (matname == mineParams.wallName and not shaftState.isNearShaft())
+    then return false end
   if matname == "sand" then hrv = 1 end
   local modName = world.mod(block,"foreground")
-  if modName and isOre(modName) then
+  if modName then --and isOre(modName) then
     dmgtiles = world.damageTiles({block},"foreground",block,"blockish",(0.75*dmg)) 
   else
     dmgtiles = world.damageTiles({block},"foreground",block,"blockish",dmg,hrv)
@@ -155,6 +162,7 @@ end
 --------------------------------------------------------------------------------
 
 function shaftState.enter()
+  if not isPleasedGiraffe() or world.getProperty("ship.fuel") ~= nil then return nil,999 end
   local position = mcontroller.position()
   local target = shaftState.findPosition(position)
   if target ~= nil then
@@ -176,7 +184,7 @@ function shaftState.findPosition(position)
   local ret = self.shaftHead
   if world.underground(footPosition) or shaftState.isNearShaft() then -- return shaft at current branch depth
     local branch = branchState.posToBranch(footPosition)
-    ret = branchState.branchToPos(branch)
+    ret = branchState.branchToPos(math.max(0,branch))
   end
 --  world.logInfo("shaft ret: %s fp: %s",ret,footPosition)
   return {position = ret}
@@ -217,7 +225,7 @@ util.debugLine(mcontroller.position(),vec2.add(mcontroller.position(),toTarget),
       -- damage tiles in way
         for dty = 1,5,1 do
         local p1,p2 = {self.shaftX-2,self.shaftHead[2]+dty},{self.shaftX+1,self.shaftHead[2]+dty}
-          local blocks = world.collisionBlocksAlongLine(p1,p2, {"Null","Block","Dynamic"})
+          local blocks = world.collisionBlocksAlongLine(p1,p2, {"Null","Block","Dynamic"},1)
           util.debugLine(p1,p2,"green")
           if #blocks > 0 then -- break blocks in way, drop ores
             for bl = 1,#blocks,1 do
@@ -232,14 +240,23 @@ util.debugLine(mcontroller.position(),vec2.add(mcontroller.position(),toTarget),
         end
       else 
         if ptInRect(position,headRect) then -- start digging down
+          shaftState.placePlatforms(true)
           shaftState.placeHeadItems()
           stateData.targetPosition = branchState.branchToPos(headbranch-1)
           stateData.timer = 5
         else 
-          move(toTarget) -- plain move, no digging
+          if moveTo(stateData.targetPosition,true) then
+            stateData.timer = stateData.timer + dt 
+          end
         end
       end
     else -- not at head
+      if branchState.isAtBranchY(curbranch) then 
+        local oids = world.itemDropQuery({curfloor[1]-2,curfloor[2]},{curfloor[1]+1,curfloor[2]+2})
+        if #oids > 0 then return true,1 end  -- pickup loot
+      end
+      shaftState.placePlatforms(not mcontroller.onGround())
+      shaftState.placeLights()
       if world.underground(position) then -- find a branch
 --    world.logInfo("the underground, woo!: %s [%s]",position,branchState.posToBranch(position))
         if not branchState.isAtBranchY(curbranch) then
@@ -247,14 +264,17 @@ util.debugLine(mcontroller.position(),vec2.add(mcontroller.position(),toTarget),
           if moveTo(curfloor,true) then 
             stateData.timer = stateData.timer + dt 
           end
-        else -- enter branchState
+        else -- at branchY maybe enter branchState
           local fd = mcontroller.facingDirection()
           if mineParams.debugshaft or not self.state.pickState({branch=curbranch,dir=fd}) then -- branches are clear
-            local oids = world.itemDropQuery({curfloor[1]-2,curfloor[2]},{curfloor[1]+1,curfloor[2]+2})
-            if #oids > 0 then return true,1 end  -- pickup loot
             if targbranch >= curbranch then
-              stateData.targetPosition = branchState.branchToPos(math.max(curbranch -1,0))
-              if curbranch > 0 then stateData.timer = 5 end
+              if curbranch > 0 then 
+                stateData.targetPosition = branchState.branchToPos(math.max(curbranch -1,0))
+                stateData.timer = 5 
+              else
+                stateData.targetPosition = self.shaftHead -- force up shaft
+                stateData.timer = 5 + math.random(5)
+              end
             end
             if curbranch % 4 == 0 then -- check every 4 branch for out of range
               if self.homeBin == nil or not world.entityExists(self.homeBin) then
@@ -268,27 +288,24 @@ util.debugLine(mcontroller.position(),vec2.add(mcontroller.position(),toTarget),
            -- 
           end
         end
-      else -- dig down more
+      else -- not 'underground' yet, dig down more
         if branchState.isAtBranchY(curbranch) then 
           if targbranch >= curbranch then
-          stateData.targetPosition = branchState.branchToPos(math.max(curbranch - 1,0))
-          stateData.timer = 5
+            stateData.targetPosition = branchState.branchToPos(math.max(curbranch - 1,0))
+            stateData.timer = 5
           end
-          local oids = world.itemDropQuery({curfloor[1]-2,curfloor[2]},{curfloor[1]+1,curfloor[2]+2})
-          if #oids > 0 then return true,1 end
         end
         shaftState.placeWalls()
         if moveTo(stateData.targetPosition,true) then
           stateData.timer = stateData.timer + dt -- readd time used for digging
         end
       end
-      shaftState.placePlatforms(not mcontroller.onGround())
-      shaftState.placeLights()
     end
-  else -- not near shaft, move to it
+  else -- not near shaft, horizontally move to it
     if moveTo({stateData.targetPosition[1], stateData.targetPosition[2] + dy}) then
       stateData.timer = stateData.timer + dt
     else -- didn't dig, can check drops
+      branchState.placeBridges()
       if math.floor(position[1]) % 5 == 0 then 
         return true
       end
@@ -329,13 +346,16 @@ function shaftState.placeLights()
   --world.placeObject("torch",position,1,{})
 end
 --------------------------------------------------------------------------------
-function shaftState.placeWalls()
+function shaftState.placeWalls() -- changed rc14 to do bg also
 local pos = mcontroller.position()
 if pos[2] >= self.shaftHead[2] then return end
-if world.underground(pos) then return end--vec2.add({0,mcontroller.boundBox()[2]},pos)
+if world.underground(pos) then return end
 local lw,rw = -3,2
   placeBlock({self.shaftX+lw,pos[2]})
   placeBlock({self.shaftX+rw,pos[2]})
+  for bgX = -2,1,1 do
+    placeBlock({self.shaftX+bgX,pos[2]},"background")
+  end
 end
 --------------------------------------------------------------------------------
 function shaftState.placeHeadItems(br)
@@ -400,9 +420,9 @@ local matname = world.material(pos,"foreground")
 --  return not(world.tileIsOccupied(pos) or world.material(pos,"foreground") ~= "platform")
 end
 --------------------------------------------------------------------------------
-function shaftState.isNearShaft()
-  local pos = mcontroller.position()
-  return math.abs(self.shaftX - pos[1]) <= 1
+function shaftState.isNearShaft(pos)
+  if pos == nil then pos = mcontroller.position() end
+  return math.abs(self.shaftX - pos[1]) <= 0.5
 end
 --------------------------------------------------------------------------------
 
@@ -418,8 +438,7 @@ end
 --------------------------------------------------------------------------------
 
 function branchState.enterWith(args)
-if type(args) ~= "table" then return nil end
-if args.branch == nil then return nil end
+if type(args) ~= "table" or args.branch == nil then return nil end
 local pos = mcontroller.position()
 if not world.underground(pos) then return nil end
 --world.logInfo("trying to enter branchState, woo")
@@ -436,6 +455,7 @@ end
 
 function branchState.findBranch(position, dir)
   local br = branchState.posToBranch(position)
+  if br < 0 then return nil end -- stop digging
   local fd = dir or mcontroller.facingDirection()
   local facingClear = branchState.isBranchClear(br,fd)
   if facingClear and branchState.isBranchClear(br,-fd) then return nil end
@@ -447,7 +467,8 @@ end
 --------------------------------------------------------------------------------
 
 function branchState.update(dt, stateData)
--- horizontal shafting - dig to X % 10, then break out to gather etc
+-- horizontal shafting - dig to X % 5, then maybe break out to gather etc
+  if mcontroller.liquidMovement() then dt = dt/2 end
   stateData.timer = stateData.timer - dt
   if stateData.targetPosition == nil then return true end
   if self.mineSoundTimer >= 0 then self.mineSoundTimer = self.mineSoundTimer - dt end
@@ -461,7 +482,7 @@ util.debugLine(mcontroller.position(),vec2.add(mcontroller.position(),toTarget),
   local targbranch = branchState.posToBranch(stateData.targetPosition)
   local curfloor = branchState.branchToPos(curbranch)
 
-  if curbranch ~= targbranch then
+  if curbranch ~= targbranch and curbranch > 0 then
     stateData.targetPosition = {stateData.targetPosition[1],math.floor(position[2]+0.5)}
   end
   
@@ -478,7 +499,7 @@ util.debugLine(mcontroller.position(),vec2.add(mcontroller.position(),toTarget),
       end
     end
   end
-  if curbranch == targbranch then
+  if curbranch == targbranch or curbranch < 0 then
   branchState.placeBridges()
   branchState.placeLights()
   end
@@ -491,10 +512,11 @@ function branchState.isBranchClear(branch, dir)
  local lef = self.shaftX
  local bot = bottY[2]+1
  local rig = self.shaftX+blen
- local top = bottY[2]+4
+ local top = bottY[2]+4.5
  if dir == -1 then lef = lef - blen rig = rig - blen end
  local chkRect = {lef,bot,rig,top}
  world.loadRegion(chkRect)
+ util.debugRect(chkRect,"yellow")
  return not world.rectTileCollision(chkRect,{"Null","Block","Dynamic"})
 end
 --------------------------------------------------------------------------------
@@ -522,13 +544,14 @@ function branchState.placeLights()
 local pos = mcontroller.position()
 if not world.underground(pos) then return false end -- shouldnt happen but meh
 local itemY = branchState.branchToPos(branchState.posToBranch(pos))[2] +1
-local itemX = math.floor((pos[1]/10)+0.5)*10
-if math.abs(pos[1] - itemX)<2 then placeLantern({itemX,itemY}) end
+local itemX = math.floor((pos[1]/20)+0.5)*20
+if math.abs(pos[1] - itemX)<1 then placeLantern({itemX,itemY}) end
 end
 --------------------------------------------------------------------------------
 function branchState.placeBridges(br)
 local pos = mcontroller.position()
 if not world.underground(pos) then return false end -- shouldnt happen but meh
+if shaftState.isNearShaft() then return false end
 if br == nil then br = branchState.posToBranch(pos) end
 local brY = branchState.branchToPos(br)[2]
 local p1,p2 = {pos[1]-3,brY},{pos[1]+2,brY}
@@ -543,12 +566,13 @@ local blocks = world.collisionBlocksAlongLine(p1,p2, {"Null","Block","Platform"}
 end
 --------------------------------------------------------------------------------
 
-function placeBlock(pos) -- pos should be a spot with no foreground material
-local spotmat = world.material(pos,"foreground")
+function placeBlock(pos,layer) -- pos should be a spot with no foreground material
+if layer == nil then layer = "foreground" end
+local spotmat = world.material(pos,layer)
 if spotmat == mineParams.platName or spotmat == mineParams.wallName then return end
-  if not spotmat and world.tileIsOccupied(pos) then  -- maybe a vine? moneypod? iunno
-    damageBlock(pos,99)
+  if layer == "foreground" and not spotmat and world.tileIsOccupied(pos) then  -- maybe a vine? moneypod? iunno
+    damageBlock(pos,99) -- fg only
   end
 -- find and place a material
-   world.placeMaterial(pos,"foreground",mineParams.wallName)
+   world.placeMaterial(pos,layer,mineParams.wallName)
 end

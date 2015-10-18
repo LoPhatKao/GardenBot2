@@ -43,7 +43,7 @@
       "fovHeight" : 4,
       "seed" : [ "seed" ],
       "gatherables" : [ 
-        {"seed" : "match", "consumable" : "type", "plant" : "match", "ore" : "match"}, "money"
+        {"seed" : "match", "consumable" : "type", "plant" : "match", "ore" : "match"}, "money", "diamond"
       ]
     },
 
@@ -53,7 +53,7 @@
     "scale" : 1.0,
 
     "movementSettings" : {
-      "collisionPoly" : [ [-1.0, -2.0], [1.0, -2.0], [1.0, 2.0], [-1.0, 2.0] ],
+      "collisionPoly" : [ [-1.0, -2.0], [1.0, -2.0], [1.0, 1.5], [-1.0, 1.5] ],
 
       "mass" : 0.2,
       "walkSpeed" : 7,
@@ -64,6 +64,7 @@
       "airForce" : 50.0
     },
 
+    "aggressive" : true,
     "knockoutTime" : 0.1,
     "knockoutEffect" : "blink",
     "deathParticles" : "deathPoof",

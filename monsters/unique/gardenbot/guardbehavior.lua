@@ -44,13 +44,17 @@ function simplegardenbot.init(args)
 
 end
 --------------------------------------------------------------------------------
-function update(dt)
-world.loadRegion({mcontroller.position()[1]-5, mcontroller.position()[2]-5,mcontroller.position()[1]+5,mcontroller.position()[2]+5})
-self.dt = dt
-simplegardenbot.main()
-end
+--function update(dt)
+--world.loadRegion({mcontroller.position()[1]-5, mcontroller.position()[2]-5,mcontroller.position()[1]+5,mcontroller.position()[2]+5})
+--self.dt = dt
+--simplegardenbot.main()
+--end
 
-function simplegardenbot.main()
+function simplegardenbot.update()
+local p1,r1 = mcontroller.position(),mcontroller.boundBox()
+world.loadRegion({p1[1]+r1[1], p1[2]+r1[2],p1[1]+r1[3],p1[2]+r1[4]})
+	self.dt = script.updateDt()
+
   self.inState = self.state.stateDesc()
   self.state.update(self.dt)--entity.dt())
   self.sensors.clear()
@@ -367,6 +371,6 @@ function attackState.setAggressive(targetId)
     entity.setAggressive(true)
   else
     setAnimationState("movement", "idle")
-    entity.setAggressive(false)
+    entity.setAggressive(entity.configParameter("aggressive"),false)
   end
 end

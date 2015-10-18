@@ -44,7 +44,10 @@ function simpleminerbot.init(args)
   self.mineSoundTimer = 0
 end
 --------------------------------------------------------------------------------
-function simpleminerbot.main()
+function simpleminerbot.update()
+local p1,r1 = mcontroller.position(),mcontroller.boundBox()
+world.loadRegion({p1[1]+r1[1], p1[2]+r1[2],p1[1]+r1[3],p1[2]+r1[4]})
+	self.dt = script.updateDt()
   self.inState = self.state.stateDesc()
   self.state.update(self.dt)--entity.dt())
   self.sensors.clear()
@@ -55,11 +58,10 @@ function simpleminerbot.main()
   end
 end
 
-function update(dt)--
-world.loadRegion({mcontroller.position()[1]-5, mcontroller.position()[2]-5,mcontroller.position()[1]+5,mcontroller.position()[2]+5})
-	self.dt = dt
-	simpleminerbot.main()
-end
+-- function update(dt)--
+ --world.logInfo("dt: %s : script/60: %s",dt,script.updateDt())
+	-- simpleminerbot.main()
+-- end
 --------------------------------------------------------------------------------
 function move(direction)
 local moveDir, moveY = 0,0
@@ -256,16 +258,17 @@ function attackState.update(dt, stateData)
   end
 
   if self.targetPosition ~= nil then
-    local armOffset = vec2.add(mcontroller.position(),{0,(mcontroller.boundBox()[2])/2})
+    local armOffset = vec2.add(mcontroller.position(),entity.configParameter("projectileOffset"))
     local toTarget = world.distance(self.targetPosition, armOffset)
     util.debugLine(armOffset,vec2.add(mcontroller.position(),toTarget),"red")
     local targDist = world.magnitude(toTarget)
     
-    if targDist < entity.configParameter("attackDistance",2) then
+    if targDist < entity.configParameter("attackDistance",5) then
       attackState.setAttackEnabled(true)
       stateData.timer = entity.configParameter("attackTargetHoldTime",5)
       if entity.hasSound("attack") then entity.playSound("attack") end
       maybeKickPetball()
+      world.spawnProjectile("lightning", armOffset, entity.id(), toTarget, false, {})
     else
       attackState.setAttackEnabled(false)
       move(toTarget)--util.toDirection(toTarget[1]))
@@ -308,6 +311,6 @@ function attackState.setAggressive(targetId)
     entity.setAggressive(true)
   else
     setAnimationState("movement", "idle")
-    entity.setAggressive(false)
+    entity.setAggressive(entity.configParameter("aggressive"),false)
   end
 end

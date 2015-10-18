@@ -16,7 +16,7 @@ end
 function gardenbot.init(args)
   entity.setDeathParticleBurst("deathPoof")
   setAnimationState("movement", "idle")
-  entity.setAggressive(false)
+  entity.setAggressive(entity.configParameter("aggressive"),false)
   
   self.inv = inventoryManager.create()
 
@@ -54,6 +54,7 @@ function gardenbot.init(args)
 end
 --------------------------------------------------------------------------------
 function gardenbot.damage(args)
+--world.logInfo("\ndamage args: %s",args)
   if args.sourceId > 0 then -- not a player, hax hp
     status.setResource("health", status.stat("maxHealth"))
   end

@@ -35,7 +35,10 @@ function simplelumberbot.init(args)
   self.csmTimer = 1
 end
 --------------------------------------------------------------------------------
-function simplelumberbot.main()
+function simplelumberbot.update()
+local p1,r1 = mcontroller.position(),mcontroller.boundBox()
+world.loadRegion({p1[1]+r1[1], p1[2]+r1[2],p1[1]+r1[3],p1[2]+r1[4]})
+	self.dt = script.updateDt()
   self.inState = self.state.stateDesc()
   self.state.update(self.dt)--entity.dt())
   self.sensors.clear()
@@ -44,11 +47,11 @@ function simplelumberbot.main()
   end
 end
 
-function update(dt)--
-world.loadRegion({mcontroller.position()[1]-5, mcontroller.position()[2]-5,mcontroller.position()[1]+5,mcontroller.position()[2]+5})
-	self.dt = dt
-	simplelumberbot.main()
-end
+-- function update(dt)--
+-- world.loadRegion({mcontroller.position()[1]-5, mcontroller.position()[2]-5,mcontroller.position()[1]+5,mcontroller.position()[2]+5})
+	-- self.dt = dt
+	-- simplelumberbot.main()
+-- end
 --------------------------------------------------------------------------------
 function move(direction)
 local moveDir, moveY = 0,0

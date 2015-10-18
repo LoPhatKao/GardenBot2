@@ -39,12 +39,14 @@ util.debugLine(mcontroller.position(),vec2.add(mcontroller.position(),toTarget),
       else
         local modPos = vec2.add({0, -1}, stateData.targetPosition)
         if stateData.layer == "background" then modPos = stateData.targetPosition end
+        if storage.mineMemory == world.mod(modPos,stateData.layer) then
         world.damageTiles({modPos}, stateData.layer, position, "plantish", 1) -- under tree?
         -- placeMaterial wouldnt work, modswap workaround
           world.placeMod(modPos,stateData.layer,"roots")
           world.damageTiles({modPos}, stateData.layer, position, "plantish", 1)
           world.spawnItem(dropNameFromMod(storage.mineMemory),stateData.targetPosition,1)
         if entity.hasSound("mine") then entity.playSound("mine") end
+        end
         storage.mineMemory = nil
       end
       return true, 1
@@ -58,19 +60,20 @@ util.debugLine(mcontroller.position(),vec2.add(mcontroller.position(),toTarget),
 end
 --------------------------------------------------------------------------------
 function mineState.findPosition(position)
-  position[2] = position[2]+mcontroller.boundBox()[2] -- lpk: fix so lumbers can do mine too
+  position[2] = position[2]+mcontroller.boundBox()[2]+1 -- lpk: fix so lumbers can do mine too
   local basePosition = {
     math.floor(position[1] + 0.5),
     math.floor(position[2] + 0.5) - 1
   }
   local layer = "foreground"
-  
+--  world.debugPoint({basePosition[1]+0.5,basePosition[2]},"#AFF000")
+  if storage.mineMemory ~= nil then storage.mineMemory = nil end
   for offset = 1, entity.configParameter("gardenSettings.plantDistance", 10), 1 do
     for d = -1, 2, 2 do
       local targetPosition = vec2.add({ offset * d, 0 }, basePosition)
       local modName = world.mod(vec2.add({0, -1}, targetPosition), "foreground")
 --  world.debugText("%s",modName,vec2.add({0, -4+offset%3}, targetPosition),"white")
---world.debugPoint(vec2.add(targetPosition,{0.5,0.5}),"white")
+--world.debugPoint(vec2.add(targetPosition,{0.5,-0.5}),"white")
       local success = false
       if (storage.mineMemory and storage.mineMemory == modName) then
         local m1 = world.material(targetPosition, "foreground")
@@ -82,7 +85,7 @@ function mineState.findPosition(position)
         storage.mineMemory = modName  -- instamine
       end
       if not success then -- check bg too
-        for yoff = 1, entity.configParameter("gardenSettings.fovHeight"),1 do
+        for yoff = 0, entity.configParameter("gardenSettings.fovHeight"),1 do
           targetPosition = vec2.add({ offset * d, yoff }, basePosition)
 --world.debugPoint(vec2.add(targetPosition,{0.5,0.5}),"yellow")
           if world.material(targetPosition, "background") then
